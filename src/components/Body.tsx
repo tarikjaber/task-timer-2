@@ -37,6 +37,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     const handleTasksInputChange = () => {
       localStorage.setItem('tasks', tasksInput.value);
       pauseTimer();
+      if (tasksInput.value.trim() === '') {
+        clearAll();
+      }
     };
 
     const handleNotesInputChange = () => {
@@ -199,7 +202,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
+    let currentTime = tasks[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks();
+
+    let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
+
+    if (currentTime !== nextTime) {
+      setTimeRemaining(nextTime);
+    }
 
     if (parsedTasks.length === 0) {
       return;
