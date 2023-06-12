@@ -1,5 +1,6 @@
 ## Task Timer
-Website to time tasks to complete. 
+![Demo of Task Timer Website](public/demo.png)
+Website to time tasks to complete.
 
 ## How to Use
 `Manage Files` will create a task `Manage Files` for 10 minutes (10 minutes is the default time for a task).

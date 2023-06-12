@@ -15,8 +15,6 @@ interface Task {
   index?: number;
 }
 
-type NumberOrNull = number | null;
-
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const intervalIdRef = useRef<number | null>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
@@ -64,7 +62,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (tasks.length === 0) {
       return;
     }
-  
+
     if (timeRemaining <= 0) {
       setTimeRemaining(tasks[0].time);
     }
@@ -72,7 +70,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
     }
-  
+
     const newIntervalId = window.setInterval(() => {
       setTimeRemaining(prevTimeRemaining => {
         const newTimeRemaining = prevTimeRemaining - 1;
@@ -84,7 +82,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }, 1000);
 
     intervalIdRef.current = newIntervalId;
-    
+
     return () => {
       clearInterval(newIntervalId);
     };
@@ -110,24 +108,24 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (tasks.length === 0) {
       return;
     }
-  
+
     const currentTask = tasks[currentTaskIndex];
     const timeIncrement = Math.floor(currentTask.time * 0.1);
     const newTimeRemaining = timeRemaining + timeIncrement;
-  
+
     // Check if the new time remaining exceeds the total task time
     const updatedTimeRemaining = Math.min(newTimeRemaining, currentTask.time);
-  
+
     // Set the updated time remaining for the current task
     setTimeRemaining(updatedTimeRemaining);
   }
-  
+
   function parseTasks() {
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
     let lines = tasksInput.value.split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
     let parsedTasks: Task[] = [];
-    
+
     parsedTasks = lines.flatMap((task, index) => {
       let parts = task.split(' ');
       let nameParts = parts.slice(0, parts.length - 1);;
@@ -135,7 +133,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       let numRepeats = 1;
       let time = 10 * 60;
       let rIndex = last.indexOf('r');
-      
+
       if (rIndex !== -1) {
         let preR = last.slice(0, rIndex);
         let postR = last.slice(rIndex + 1);
@@ -149,8 +147,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         nameParts.push(last);
       }
 
-      const taskName = nameParts.join(', ');
-      
+      const taskName = nameParts.join(' ');
+
       if (numRepeats === 1) {
         return [{
           name: taskName,
@@ -168,7 +166,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     });
     return parsedTasks;
   }
-  
+
   function clearAll() {
     localStorage.removeItem('tasks');
     setCurrentTaskIndex(0);
@@ -202,7 +200,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
   function playTimer() {
     const parsedTasks = parseTasks();
-  
+
     if (parsedTasks.length === 0) {
       return;
     }
