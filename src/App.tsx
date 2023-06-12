@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import Body from './components/Body';
 import '@fontsource/roboto/300.css';
@@ -12,7 +12,7 @@ const lightTheme = createTheme({
   palette: {
     mode: 'light',
   }
-})
+});
 
 const darkTheme = createTheme({
   palette: {
@@ -21,10 +21,25 @@ const darkTheme = createTheme({
 });
 
 function App() {
+  const [darkMode, setDarkMode] = React.useState(false);
+
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode) {
+      setDarkMode(savedDarkMode === 'true');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const updatedDarkMode = !darkMode;
+    setDarkMode(updatedDarkMode);
+    localStorage.setItem('darkMode', updatedDarkMode.toString());
+  };
+
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
-      <Body />
+      <Body toggleDarkMode={toggleDarkMode} darkMode={darkMode} />
     </ThemeProvider>
   );
 }
