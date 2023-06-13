@@ -81,8 +81,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
   
   function clearAll() {
-    console.log("CLEAR ALL CALLED")
-
     localStorage.removeItem('tasks');
     localStorage.removeItem('notes');
     setCurrentTaskIndex(0);
@@ -90,11 +88,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setIsPlaying(false);
     setTasks([]);
 
-
-    console.log("Interval ID: ", intervalId)
-
     if (intervalId) {
-      console.log("Clear Interval Called")
       clearInterval(intervalId);
     }
     setIntervalId(null);
@@ -120,8 +114,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       return;
     }
   
-    console.log("Settings tasks to parsed tasks: ", parsedTasks);
-  
     setTasks(parsedTasks);
   }
   
@@ -141,7 +133,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     const newIntervalId = window.setInterval(() => {
       setTimeRemaining(prevTimeRemaining => {
         const newTimeRemaining = prevTimeRemaining - 1;
-        console.log("Tasks: ", tasks);
         if (newTimeRemaining <= 0) {
           skipNext();
         }
@@ -164,17 +155,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function skipNext() {
-    console.log("Skip next called");
-    console.log(currentTaskIndex);
-    console.log(tasks);
-    console.log("Tasks Length: ", tasks.length)
+    if (tasks.length === 0) {
+      return;
+    }
     if (currentTaskIndex < tasks.length - 1) {
-      console.log("Task completed notification: ", `"${tasks[currentTaskIndex].name}" completed, ${tasks[currentTaskIndex + 1].name} started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
       new Notification(`"${tasks[currentTaskIndex].name}" completed, ${tasks[currentTaskIndex + 1].name} started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
       setTimeRemaining(tasks[currentTaskIndex + 1].time);
       setCurrentTaskIndex(prevIndex => prevIndex + 1);
     } else {
-      console.log('All tasks completed notification')
       new Notification("All tasks completed!")
       clearAll();
     }
