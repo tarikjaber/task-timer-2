@@ -37,13 +37,13 @@ function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, paus
       </Tooltip>
       {isPlaying ? (
         <Tooltip title="Pause">
-          <IconButton onClick={playTimer}>
+          <IconButton onClick={pauseTimer}>
             <PauseIcon sx={{ fontSize: 50 }} />
           </IconButton>
         </Tooltip>
       ) : (
         <Tooltip title="Play">
-          <IconButton onClick={pauseTimer}>
+          <IconButton onClick={playTimer}>
             <PlayArrowIcon sx={{ fontSize: 50 }} />
           </IconButton>
         </Tooltip>

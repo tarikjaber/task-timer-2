@@ -107,7 +107,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   function playTimer() {
     const parsedTasks = parseTasks();
   
-    console.log(parsedTasks);
     if (parsedTasks.length === 0) {
       return;
     }
