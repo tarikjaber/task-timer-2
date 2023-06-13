@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import TextField from '@mui/material/TextField';
 import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
@@ -15,8 +15,10 @@ interface Task {
   index?: number;
 }
 
+type NumberOrNull = number | null;
+
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
-  const [intervalId, setIntervalId] = useState<number | null>(null);
+  const intervalIdRef = useRef<number | null>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,6 +30,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     const handleTasksInputChange = () => {
       localStorage.setItem('tasks', tasksInput.value);
+      pauseTimer();
     };
 
     const handleNotesInputChange = () => {
@@ -42,6 +45,36 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       notesInput.removeEventListener('input', handleNotesInputChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (tasks.length === 0) {
+      return;
+    }
+  
+    if (timeRemaining <= 0) {
+      setTimeRemaining(tasks[0].time);
+    }
+
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+    }
+  
+    const newIntervalId = window.setInterval(() => {
+      setTimeRemaining(prevTimeRemaining => {
+        const newTimeRemaining = prevTimeRemaining - 1;
+        if (newTimeRemaining <= 0) {
+          skipNext();
+        }
+        return newTimeRemaining;
+      });
+    }, 1000);
+
+    intervalIdRef.current = newIntervalId;
+    
+    return () => {
+      clearInterval(newIntervalId);
+    };
+  }, [tasks, currentTaskIndex]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -76,7 +109,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
   
   function parseTasks() {
-    console.log("yo");
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
     let lines = tasksInput.value.split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
@@ -120,7 +152,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         }));
       }
     });
-    console.log(parsedTasks);
     return parsedTasks;
   }
   
@@ -131,21 +162,28 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setIsPlaying(false);
     setTasks([]);
 
-    if (intervalId) {
-      clearInterval(intervalId);
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
     }
-    setIntervalId(null);
+    intervalIdRef.current = null;
 
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
     tasksInput.value = '';
   }
 
   function resetCurrentTaskTime() {
-    if (!isPlaying) {
+    if (tasks.length === 0) {
       return;
     }
 
     setTimeRemaining(tasks[currentTaskIndex].time);
+  }
+
+  function pauseTimer() {
+    setIsPlaying(false);
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+    }
   }
 
   function playTimer() {
@@ -158,50 +196,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setIsPlaying(true);
     setTasks(parsedTasks);
   }
-  
-  useEffect(() => {
-    if (tasks.length === 0) {
-      return;
-    }
-  
-    if (timeRemaining <= 0) {
-      setTimeRemaining(tasks[0].time);
-    }
-
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-  
-    const newIntervalId = window.setInterval(() => {
-      setTimeRemaining(prevTimeRemaining => {
-        const newTimeRemaining = prevTimeRemaining - 1;
-        if (newTimeRemaining <= 0) {
-          skipNext();
-        }
-        return newTimeRemaining;
-      });
-    }, 1000);
-  
-    setIntervalId(newIntervalId);
-  
-    return () => {
-      clearInterval(newIntervalId);
-    };
-  }, [tasks, currentTaskIndex]);
-  
-  function pauseTimer() {
-    setIsPlaying(false);
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-  }
 
   function skipNext() {
     if (tasks.length === 0) {
       return;
     }
     if (currentTaskIndex < tasks.length - 1) {
-      new Notification(`"${tasks[currentTaskIndex].name}" completed, ${tasks[currentTaskIndex + 1].name} started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      new Notification(`"${tasks[currentTaskIndex].name}" completed, "${tasks[currentTaskIndex + 1].name}" started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
       setTimeRemaining(tasks[currentTaskIndex + 1].time);
       setCurrentTaskIndex(prevIndex => prevIndex + 1);
     } else {
