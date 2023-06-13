@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Tooltip, Box } from '@mui/material';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import StartIcon from '@mui/icons-material/Start';
@@ -10,36 +11,61 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
 interface IconsProps {
+  clearAll: () => void;
+  resetCurrentTaskTime: () => void;
   toggleDarkMode: () => void;
-  play (): void;
+  playTimer (): void;
+  pauseTimer (): void;
+  skipNext (): void;
+  skipPrevious (): void;
+  setIsPlaying: (isPlaying: boolean) => void;
+  isPlaying: boolean;
   darkMode: boolean;
 }
 
-function Icons({ toggleDarkMode, play, darkMode }: IconsProps) {
+function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, pauseTimer, skipNext, skipPrevious, setIsPlaying, isPlaying, darkMode }: IconsProps) {
+  const handlePlay = () => {
+    setIsPlaying(true);
+    playTimer();
+  };
+
+  const handlePause = () => {
+    setIsPlaying(false);
+    pauseTimer();
+  };
+
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
       <Tooltip title="Clear all tasks and task input">
-        <IconButton aria-label="Clear all tasks and task input">
+        <IconButton aria-label="Clear all tasks and task input" onClick={clearAll}>
           <ClearAllIcon sx={{ fontSize: 50 }} />
         </IconButton>
       </Tooltip>
       <Tooltip title="Reset current task's time">
-        <IconButton>
+        <IconButton onClick={resetCurrentTaskTime}>
           <StartIcon sx={{ fontSize: 50 }} />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Play">
-        <IconButton onClick={play}>
-          <PlayArrowIcon sx={{ fontSize: 50 }} />
-        </IconButton>
-      </Tooltip>
+      {isPlaying ? (
+        <Tooltip title="Pause">
+          <IconButton onClick={handlePause}>
+            <PauseIcon sx={{ fontSize: 50 }} />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip title="Play">
+          <IconButton onClick={handlePlay}>
+            <PlayArrowIcon sx={{ fontSize: 50 }} />
+          </IconButton>
+        </Tooltip>
+      )}
       <Tooltip title="Skip to previous task">
-        <IconButton>
+        <IconButton onClick={skipPrevious}>
           <SkipPreviousIcon sx={{ fontSize: 50 }} />
         </IconButton>
       </Tooltip>
       <Tooltip title="Skip to next task">
-        <IconButton>
+        <IconButton onClick={skipNext}>
           <SkipNextIcon sx={{ fontSize: 50 }} />
         </IconButton>
       </Tooltip>

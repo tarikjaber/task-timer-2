@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import './Body.css';
 import TextField from '@mui/material/TextField';
 import { Typography, Tooltip, Box } from '@mui/material';
 import Icons from './Icons';
+import { ConstructionOutlined } from '@mui/icons-material';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -18,8 +18,10 @@ interface Task {
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [intervalId, setIntervalId] = useState<number | null>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [currentTaskName, setCurrentTaskName] = useState<string>('');
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
@@ -46,20 +48,12 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return /^-?\d+$/.test(value);
   }
 
-  function clearAll() {
-
-  }
-
-  function resetCurrentTaskTime() {
-
-  }
-
   function parseTasks() {
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
-    let tasks = tasksInput.value.split('\n').filter(task => task.trim() !== '');
-    tasks = tasks.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
+    let lines = tasksInput.value.split('\n').filter(task => task.trim() !== '');
+    lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
     let parsedTasks: Task[] = [];
-    parsedTasks = tasks.map(task => {
+    parsedTasks = lines.map(task => {
       let parts = task.split(' ');
       let last = parts[parts.length - 1];
       let numRepeats = 1;
@@ -73,8 +67,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           numRepeats = parseInt(postR);
         }
       } else {
-        if (isNumeric(last)) {
-          time = parseInt(last) * 60;
+        if (!isNaN(Number(last))) {
+          time = Number(last) * 60;
         }
       }
       return {
@@ -85,44 +79,122 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     });
     return parsedTasks;
   }
+  
+  function clearAll() {
+    console.log("CLEAR ALL CALLED")
 
-  function play() {
-    setTasks(parseTasks());
+    localStorage.removeItem('tasks');
+    localStorage.removeItem('notes');
+    setCurrentTaskIndex(0);
+    setTimeRemaining(0);
+    setIsPlaying(false);
+    setTasks([]);
 
-    const newIntervalId = window.setInterval(() => {
-      setTimeRemaining(timeRemaining => {
-        if (timeRemaining <= 0) {
-          skipNext();
-        }
-        return timeRemaining - 1;
-      });
-    }, 1000);
 
-    setIntervalId(newIntervalId);
+    console.log("Interval ID: ", intervalId)
+
+    if (intervalId) {
+      console.log("Clear Interval Called")
+      clearInterval(intervalId);
+    }
+    setIntervalId(null);
+
+    const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
+    const notesInput = document.getElementById('notes-input') as HTMLInputElement;
+    tasksInput.value = '';
+    notesInput.value = '';
   }
 
-  function pause() {
+  function resetCurrentTaskTime() {
+    if (!isPlaying) {
+      return;
+    }
+
+    setTimeRemaining(tasks[currentTaskIndex].time);
+  }
+
+  function playTimer() {
+    const parsedTasks = parseTasks();
+  
+    if (parsedTasks.length === 0) {
+      return;
+    }
+  
+    console.log("Settings tasks to parsed tasks: ", parsedTasks);
+  
+    setTasks(parsedTasks);
+  }
+  
+  useEffect(() => {
+    if (tasks.length === 0) {
+      return;
+    }
+  
+    if (timeRemaining <= 0) {
+      setTimeRemaining(tasks[0].time);
+    }
+
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+  
+    const newIntervalId = window.setInterval(() => {
+      setTimeRemaining(prevTimeRemaining => {
+        const newTimeRemaining = prevTimeRemaining - 1;
+        console.log("Tasks: ", tasks);
+        if (newTimeRemaining <= 0) {
+          skipNext();
+        }
+        return newTimeRemaining;
+      });
+    }, 1000);
+  
+    setIntervalId(newIntervalId);
+  
+    // Cleanup interval on component unmount or when tasks change
+    return () => {
+      clearInterval(newIntervalId);
+    };
+  }, [tasks, currentTaskIndex]);
+  
+  function pauseTimer() {
     if (intervalId) {
       clearInterval(intervalId);
     }
   }
 
   function skipNext() {
-
+    console.log("Skip next called");
+    console.log(currentTaskIndex);
+    console.log(tasks);
+    console.log("Tasks Length: ", tasks.length)
+    if (currentTaskIndex < tasks.length - 1) {
+      console.log("Task completed notification: ", `"${tasks[currentTaskIndex].name}" completed, ${tasks[currentTaskIndex + 1].name} started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      new Notification(`"${tasks[currentTaskIndex].name}" completed, ${tasks[currentTaskIndex + 1].name} started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      setTimeRemaining(tasks[currentTaskIndex + 1].time);
+      setCurrentTaskIndex(prevIndex => prevIndex + 1);
+    } else {
+      console.log('All tasks completed notification')
+      new Notification("All tasks completed!")
+      clearAll();
+    }
   }
 
   function skipPrevious() {
-
+    if (currentTaskIndex > 0) {
+      setTimeRemaining(tasks[currentTaskIndex - 1].time);
+      setCurrentTaskIndex(currentTaskIndex - 1);
+    }
   }
 
   return (
-    <div className="body">
+    <Box sx={{padding: '20px'}}>
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h1" gutterBottom sx={{ mb: -1, fontWeight: 'bold', mt: -2, fontSize: '120px' }}>
-          00:00
+          {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
         <Typography variant="h3" gutterBottom sx={{ mb: 2 }}>
-          Task Timer
+          {tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto' }}>
@@ -147,8 +219,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           defaultValue={localStorage.getItem('notes')}
         />
       </Box>
-      <Icons toggleDarkMode={toggleDarkMode} play={play}  darkMode={darkMode} />
-    </div>
+      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, setIsPlaying }} />
+    </Box>
   );
 }
 
