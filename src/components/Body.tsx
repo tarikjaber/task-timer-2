@@ -84,6 +84,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     
     parsedTasks = lines.flatMap((task, index) => {
       let parts = task.split(' ');
+      let nameParts = parts.slice(0, parts.length - 1);;
       let last = parts[parts.length - 1];
       let numRepeats = 1;
       let time = 10 * 60;
@@ -96,21 +97,23 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           time = Number(preR) * 60;
           numRepeats = parseInt(postR);
         }
+      } else if (!isNaN(Number(last))){
+        time = Number(last) * 60;
       } else {
-        if (!isNaN(Number(last))) {
-          time = Number(last) * 60;
-        }
+        nameParts.push(last);
       }
+
+      const taskName = nameParts.join(', ');
       
       if (numRepeats === 1) {
         return [{
-          name: parts[0],
+          name: taskName,
           time,
           repetitionCount: numRepeats
         }];
       } else {
         return Array.from({ length: numRepeats }, (_, repeatIndex) => ({
-          name: parts[0],
+          name: taskName,
           time,
           repetitionCount: numRepeats,
           index: repeatIndex + 1
@@ -215,7 +218,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   return (
-    <Box sx={{padding: '20px'}}>
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h1" gutterBottom sx={{ mb: -1, fontWeight: 'bold', mt: -2, fontSize: '120px' }}>
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
@@ -224,7 +227,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {tasks[currentTaskIndex]?.index ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto' }}>
+      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
         <TextField
           id="tasks-input"
           label="Tasks"
@@ -232,7 +235,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           rows={12}
           variant="filled"
           placeholder='Enter task and time in minutes on a line for every task like "Task Name 10" for 10 minutes.'
-          sx={{ flex: '1', marginRight: '20px' }}
+          sx={{ flex: '1', marginRight: '20px', width: '100%' }}
           defaultValue={localStorage.getItem('tasks')}
         />
         <TextField
@@ -242,7 +245,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           rows={12}
           variant="filled"
           placeholder="Enter notes..."
-          sx={{ flex: '1' }}
+          sx={{ flex: '1', width: '100%' }}
           defaultValue={localStorage.getItem('notes')}
         />
       </Box>
