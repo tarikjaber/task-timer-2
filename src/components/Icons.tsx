@@ -18,22 +18,11 @@ interface IconsProps {
   pauseTimer (): void;
   skipNext (): void;
   skipPrevious (): void;
-  setIsPlaying: (isPlaying: boolean) => void;
   isPlaying: boolean;
   darkMode: boolean;
 }
 
-function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, pauseTimer, skipNext, skipPrevious, setIsPlaying, isPlaying, darkMode }: IconsProps) {
-  const handlePlay = () => {
-    setIsPlaying(true);
-    playTimer();
-  };
-
-  const handlePause = () => {
-    setIsPlaying(false);
-    pauseTimer();
-  };
-
+function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, darkMode }: IconsProps) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
       <Tooltip title="Clear all tasks and task input">
@@ -48,13 +37,13 @@ function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, paus
       </Tooltip>
       {isPlaying ? (
         <Tooltip title="Pause">
-          <IconButton onClick={handlePause}>
+          <IconButton onClick={playTimer}>
             <PauseIcon sx={{ fontSize: 50 }} />
           </IconButton>
         </Tooltip>
       ) : (
         <Tooltip title="Play">
-          <IconButton onClick={handlePlay}>
+          <IconButton onClick={pauseTimer}>
             <PlayArrowIcon sx={{ fontSize: 50 }} />
           </IconButton>
         </Tooltip>

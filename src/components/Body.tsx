@@ -82,7 +82,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   
   function clearAll() {
     localStorage.removeItem('tasks');
-    localStorage.removeItem('notes');
     setCurrentTaskIndex(0);
     setTimeRemaining(0);
     setIsPlaying(false);
@@ -94,9 +93,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setIntervalId(null);
 
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
-    const notesInput = document.getElementById('notes-input') as HTMLInputElement;
     tasksInput.value = '';
-    notesInput.value = '';
   }
 
   function resetCurrentTaskTime() {
@@ -110,10 +107,12 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   function playTimer() {
     const parsedTasks = parseTasks();
   
+    console.log(parsedTasks);
     if (parsedTasks.length === 0) {
       return;
     }
-  
+
+    setIsPlaying(true);
     setTasks(parsedTasks);
   }
   
@@ -149,6 +148,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, [tasks, currentTaskIndex]);
   
   function pauseTimer() {
+    setIsPlaying(false);
     if (intervalId) {
       clearInterval(intervalId);
     }
@@ -207,7 +207,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           defaultValue={localStorage.getItem('notes')}
         />
       </Box>
-      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, setIsPlaying }} />
+      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying }} />
     </Box>
   );
 }
