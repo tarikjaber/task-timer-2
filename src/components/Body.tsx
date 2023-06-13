@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import TextField from '@mui/material/TextField';
-import { Typography, Tooltip, Box } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
-import { ConstructionOutlined } from '@mui/icons-material';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -13,12 +12,12 @@ interface Task {
   name: string;
   time: number;
   repetitionCount: number;
+  index?: number;
 }
 
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [intervalId, setIntervalId] = useState<number | null>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
-  const [currentTaskName, setCurrentTaskName] = useState<string>('');
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -49,21 +48,24 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function parseTasks() {
+    console.log("yo");
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
     let lines = tasksInput.value.split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
     let parsedTasks: Task[] = [];
-    parsedTasks = lines.map(task => {
+    
+    parsedTasks = lines.flatMap((task, index) => {
       let parts = task.split(' ');
       let last = parts[parts.length - 1];
       let numRepeats = 1;
       let time = 10 * 60;
       let rIndex = last.indexOf('r');
+      
       if (rIndex !== -1) {
         let preR = last.slice(0, rIndex);
         let postR = last.slice(rIndex + 1);
-        if (isNumeric(preR) && isNumeric(postR)) {
-          time = parseInt(preR) * 60;
+        if (!isNaN(Number(preR)) && isNumeric(postR)) {
+          time = Number(preR) * 60;
           numRepeats = parseInt(postR);
         }
       } else {
@@ -71,12 +73,23 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           time = Number(last) * 60;
         }
       }
-      return {
-        name: parts[0],
-        time,
-        repetitionCount: numRepeats
-      };
+      
+      if (numRepeats === 1) {
+        return [{
+          name: parts[0],
+          time,
+          repetitionCount: numRepeats
+        }];
+      } else {
+        return Array.from({ length: numRepeats }, (_, repeatIndex) => ({
+          name: parts[0],
+          time,
+          repetitionCount: numRepeats,
+          index: repeatIndex + 1
+        }));
+      }
     });
+    console.log(parsedTasks);
     return parsedTasks;
   }
   
@@ -140,7 +153,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   
     setIntervalId(newIntervalId);
   
-    // Cleanup interval on component unmount or when tasks change
     return () => {
       clearInterval(newIntervalId);
     };
@@ -181,7 +193,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
         <Typography variant="h3" gutterBottom sx={{ mb: 2 }}>
-          {tasks[currentTaskIndex]?.name || 'Task Timer'}
+          {tasks[currentTaskIndex]?.index ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto' }}>
