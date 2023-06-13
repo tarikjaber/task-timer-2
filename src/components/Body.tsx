@@ -24,6 +24,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  function togglePlayPause() {
+    if (isPlaying) {
+      pauseTimer();
+    } else {
+      playTimer();
+    }
+  }
+
   useEffect(() => {
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
     const notesInput = document.getElementById('notes-input') as HTMLInputElement;
@@ -38,6 +46,12 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
 
     tasksInput.addEventListener('input', handleTasksInputChange);
+    tasksInput.addEventListener('keydown' as any, (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key === "Enter") {
+        e.preventDefault();
+        togglePlayPause();
+      }
+    });
     notesInput.addEventListener('input', handleNotesInputChange);
 
     return () => {
