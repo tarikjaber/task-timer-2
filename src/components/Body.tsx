@@ -43,10 +43,38 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (isPlaying) {
+      document.title = `${Math.floor(timeRemaining / 60)
+        .toString()
+        .padStart(2, '0')}:${(timeRemaining % 60)
+        .toString()
+        .padStart(2, '0')} - ${tasks[currentTaskIndex]?.name || 'Task Timer'}`;
+    } else {
+      document.title = 'Task Timer';
+    }
+  }, [isPlaying, timeRemaining, tasks, currentTaskIndex]);
+
   function isNumeric(value: string) {
     return /^-?\d+$/.test(value);
   }
 
+  function tenPercentBack() {
+    if (tasks.length === 0) {
+      return;
+    }
+  
+    const currentTask = tasks[currentTaskIndex];
+    const timeIncrement = Math.floor(currentTask.time * 0.1);
+    const newTimeRemaining = timeRemaining + timeIncrement;
+  
+    // Check if the new time remaining exceeds the total task time
+    const updatedTimeRemaining = Math.min(newTimeRemaining, currentTask.time);
+  
+    // Set the updated time remaining for the current task
+    setTimeRemaining(updatedTimeRemaining);
+  }
+  
   function parseTasks() {
     console.log("yo");
     const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
@@ -218,7 +246,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           defaultValue={localStorage.getItem('notes')}
         />
       </Box>
-      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying }} />
+      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, tenPercentBack }} />
     </Box>
   );
 }

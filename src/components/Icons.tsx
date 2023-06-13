@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { Tooltip, Box } from '@mui/material';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
+import ClearIcon from '@mui/icons-material/Clear';
 import StartIcon from '@mui/icons-material/Start';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -9,6 +8,7 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import IconButton from '@mui/material/IconButton';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import PercentIcon from '@mui/icons-material/Percent';
 
 interface IconsProps {
   clearAll: () => void;
@@ -18,16 +18,22 @@ interface IconsProps {
   pauseTimer (): void;
   skipNext (): void;
   skipPrevious (): void;
+  tenPercentBack (): void;
   isPlaying: boolean;
   darkMode: boolean;
 }
 
-function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, darkMode }: IconsProps) {
+function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying, darkMode }: IconsProps) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
       <Tooltip title="Clear all tasks and task input">
         <IconButton aria-label="Clear all tasks and task input" onClick={clearAll}>
-          <ClearAllIcon sx={{ fontSize: 50 }} />
+          <ClearIcon sx={{ fontSize: 50 }} />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Add 10% of task's full time back">
+        <IconButton onClick={tenPercentBack}>
+          <PercentIcon sx={{ fontSize: 50 }} />
         </IconButton>
       </Tooltip>
       <Tooltip title="Reset current task's time">
