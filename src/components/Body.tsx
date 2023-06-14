@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import TextField from '@mui/material/TextField';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, Paper } from '@mui/material';
 import Icons from './Icons';
 import Editor from '@monaco-editor/react';
 
@@ -32,36 +32,36 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
-  useEffect(() => {
-    const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
-    const notesInput = document.getElementById('notes-input') as HTMLInputElement;
+  // useEffect(() => {
+  //   const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
+  //   const notesInput = document.getElementById('notes-input') as HTMLInputElement;
 
-    const handleTasksInputChange = () => {
-      localStorage.setItem('tasks', tasksInput.value);
-      pauseTimer();
-      if (tasksInput.value.trim() === '') {
-        clearAll();
-      }
-    };
+  //   const handleTasksInputChange = () => {
+  //     localStorage.setItem('tasks', tasksInput.value);
+  //     pauseTimer();
+  //     if (tasksInput.value.trim() === '') {
+  //       clearAll();
+  //     }
+  //   };
 
-    const handleNotesInputChange = () => {
-      localStorage.setItem('notes', notesInput.value);
-    };
+  //   const handleNotesInputChange = () => {
+  //     localStorage.setItem('notes', notesInput.value);
+  //   };
 
-    tasksInput.addEventListener('input', handleTasksInputChange);
-    tasksInput.addEventListener('keydown' as any, (e: KeyboardEvent) => {
-      if (e.shiftKey && e.key === "Enter") {
-        e.preventDefault();
-        togglePlayPause();
-      }
-    });
-    notesInput.addEventListener('input', handleNotesInputChange);
+  //   tasksInput.addEventListener('input', handleTasksInputChange);
+  //   tasksInput.addEventListener('keydown' as any, (e: KeyboardEvent) => {
+  //     if (e.shiftKey && e.key === "Enter") {
+  //       e.preventDefault();
+  //       togglePlayPause();
+  //     }
+  //   });
+  //   notesInput.addEventListener('input', handleNotesInputChange);
 
-    return () => {
-      tasksInput.removeEventListener('input', handleTasksInputChange);
-      notesInput.removeEventListener('input', handleNotesInputChange);
-    };
-  }, []);
+  //   return () => {
+  //     tasksInput.removeEventListener('input', handleTasksInputChange);
+  //     notesInput.removeEventListener('input', handleNotesInputChange);
+  //   };
+  // }, []);
 
   useEffect(() => {
     if (tasks.length === 0) {
@@ -242,9 +242,22 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
-  function monacoEditorChanged() {
+  function monacoEditorChanged(value?: string) {
     console.log('changed')
+    console.log("to value: ", value)
   }
+
+  function handleTasksInputChange(value?: string) {
+    localStorage.setItem('tasks', value ?? '');
+    pauseTimer();
+    if ((value ?? '').trim() === '') {
+      clearAll();
+    }
+  };
+
+  function handleNotesInputChange(value?: string) {
+    localStorage.setItem('notes', value ?? '');
+  };
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
@@ -256,7 +269,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {tasks[currentTaskIndex]?.index ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+      {/* <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
         <TextField
           id="tasks-input"
           label="Tasks"
@@ -277,16 +290,21 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           sx={{ flex: '1', width: '100%' }}
           defaultValue={localStorage.getItem('notes')}
         />
+      </Box> */}
+      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        <Box sx={{ flex: '1', width: '100%', marginRight: '20px' }}>
+          <Paper variant="outlined" sx={{ p: 0 }}>
+            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {autohide: true}, fontSize: 18}} onChange={handleTasksInputChange}/>
+          </Paper>
+        </Box>
+
+        <Box sx={{ flex: '1', width: '100%' }}>
+          <Paper variant="outlined" sx={{ p: 0 }}>
+            <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {autohide: true}, fontSize: 18}} onChange={handleNotesInputChange}/>
+          </Paper>
+        </Box>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, tenPercentBack }} />
-      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ flex: '1', width: '100%' }}>
-          <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off", minimap: {autohide: true}}} onChange={monacoEditorChanged}/>
-        </Box>
-        <Box sx={{ flex: '1', width: '100%' }}>
-          <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off", minimap: {autohide: true}}} onChange={monacoEditorChanged}/>
-        </Box>
-      </Box>
     </Box>
   );
 }
