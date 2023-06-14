@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import TextField from '@mui/material/TextField';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, Paper } from '@mui/material';
 import Icons from './Icons';
 import Editor from '@monaco-editor/react';
 
@@ -23,6 +23,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksInputValue, setTasksInputValue] = useState<string>('');
 
   function togglePlayPause() {
     if (isPlaying) {
@@ -33,34 +34,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   useEffect(() => {
-    const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
-    const notesInput = document.getElementById('notes-input') as HTMLInputElement;
-
-    const handleTasksInputChange = () => {
-      localStorage.setItem('tasks', tasksInput.value);
-      pauseTimer();
-      if (tasksInput.value.trim() === '') {
-        clearAll();
-      }
-    };
-
-    const handleNotesInputChange = () => {
-      localStorage.setItem('notes', notesInput.value);
-    };
-
-    tasksInput.addEventListener('input', handleTasksInputChange);
-    tasksInput.addEventListener('keydown' as any, (e: KeyboardEvent) => {
-      if (e.shiftKey && e.key === "Enter") {
-        e.preventDefault();
-        togglePlayPause();
-      }
-    });
-    notesInput.addEventListener('input', handleNotesInputChange);
-
-    return () => {
-      tasksInput.removeEventListener('input', handleTasksInputChange);
-      notesInput.removeEventListener('input', handleNotesInputChange);
-    };
+    setTasksInputValue(localStorage.getItem('tasks') || '');
   }, []);
 
   useEffect(() => {
@@ -126,8 +100,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function parseTasks() {
-    const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
-    let lines = tasksInput.value.split('\n').filter(task => task.trim() !== '');
+    let lines = tasksInputValue.split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
     let parsedTasks: Task[] = [];
 
@@ -183,9 +156,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       clearInterval(intervalIdRef.current);
     }
     intervalIdRef.current = null;
-
-    const tasksInput = document.getElementById('tasks-input') as HTMLInputElement;
-    tasksInput.value = '';
   }
 
   function resetCurrentTaskTime() {
@@ -242,9 +212,18 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
-  function monacoEditorChanged() {
-    console.log('changed')
-  }
+  function handleTasksInputChange(value?: string) {
+    localStorage.setItem('tasks', value ?? '');
+    setTasksInputValue(value ?? '');
+    pauseTimer();
+    if ((value ?? '').trim() === '') {
+      clearAll();
+    }
+  };
+
+  function handleNotesInputChange(value?: string) {
+    localStorage.setItem('notes', value ?? '');
+  };
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
@@ -257,36 +236,18 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <TextField
-          id="tasks-input"
-          label="Tasks"
-          multiline
-          rows={12}
-          variant="filled"
-          placeholder='Enter task and time in minutes on a line for every task like "Task Name 10" for 10 minutes.'
-          sx={{ flex: '1', marginRight: '20px', width: '100%' }}
-          defaultValue={localStorage.getItem('tasks')}
-        />
-        <TextField
-          id="notes-input"
-          label="Notes"
-          multiline
-          rows={12}
-          variant="filled"
-          placeholder="Enter notes..."
-          sx={{ flex: '1', width: '100%' }}
-          defaultValue={localStorage.getItem('notes')}
-        />
+        <Box sx={{ flex: '1', width: '100%', marginRight: '20px' }}>
+          <Paper variant="outlined" sx={{ p: 0 }}>
+            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18, lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}}} onChange={handleTasksInputChange} value='hg'/>
+          </Paper>
+        </Box>
+        <Box sx={{ flex: '1', width: '100%' }}>
+          <Paper variant="outlined" sx={{ p: 0 }}>
+            <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18, lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}}} onChange={handleNotesInputChange}/>
+          </Paper>
+        </Box>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, tenPercentBack }} />
-      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ flex: '1', width: '100%' }}>
-          <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off", minimap: {autohide: true}}} onChange={monacoEditorChanged}/>
-        </Box>
-        <Box sx={{ flex: '1', width: '100%' }}>
-          <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off", minimap: {autohide: true}}} onChange={monacoEditorChanged}/>
-        </Box>
-      </Box>
     </Box>
   );
 }
