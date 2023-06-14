@@ -242,6 +242,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
+  function monacoEditorChanged() {
+    console.log('changed')
+  }
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
       <Box sx={{ textAlign: 'center' }}>
@@ -275,7 +279,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         />
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, tenPercentBack }} />
-      <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off" }}/>;
+      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        <Box sx={{ flex: '1', width: '100%' }}>
+          <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off", minimap: {autohide: true}}} onChange={monacoEditorChanged}/>
+        </Box>
+        <Box sx={{ flex: '1', width: '100%' }}>
+          <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off", minimap: {autohide: true}}} onChange={monacoEditorChanged}/>
+        </Box>
+      </Box>
     </Box>
   );
 }
