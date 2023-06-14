@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import TextField from '@mui/material/TextField';
 import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
+import Editor from '@monaco-editor/react';
+
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -273,6 +275,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         />
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, tenPercentBack }} />
+      <Editor height="90vh" defaultLanguage="markdown" theme="vs-dark" options={{ lineNumbers: "off" }}/>;
     </Box>
   );
 }
