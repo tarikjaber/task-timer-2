@@ -235,13 +235,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {tasks[currentTaskIndex]?.index ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ flex: '1 1 0', width: '100%', marginRight: '20px' }}>
+      <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        <Box sx={{ width: 'calc(50% - 10px)', display: "inline-block" }}>
           <Paper variant="outlined" sx={{ p: 0 }}>
             <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18, lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}}} onChange={handleTasksInputChange}/>
           </Paper>
         </Box>
-        <Box sx={{ flex: '1 1 0', width: '100%' }}>
+        <Box sx={{ width: 'calc(50% - 10px)', display: "inline-block", marginLeft: "20px" }}>
           <Paper variant="outlined" sx={{ p: 0 }}>
             <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18,  lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}}} onChange={handleNotesInputChange}/>
           </Paper>
