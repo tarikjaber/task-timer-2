@@ -3,8 +3,9 @@ import TextField from '@mui/material/TextField';
 import { Typography, Box, Paper } from '@mui/material';
 import ReactResizeDetector from 'react-resize-detector';
 import Icons from './Icons';
-import Editor from '@monaco-editor/react';
-
+import Editor, { Monaco, editor } from '@monaco-editor/react';
+import MonacoEditor from 'react-monaco-editor';
+import { monaco } from 'react-monaco-editor';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -20,14 +21,17 @@ interface Task {
 
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const intervalIdRef = useRef<number | null>(null);
+  const isPlayingRef = useRef<boolean>(false);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
 
   function togglePlayPause() {
-    if (isPlaying) {
+    console.log("toggle play pause: " + isPlayingRef.current)
+    if (isPlayingRef.current) {
       pauseTimer();
     } else {
       playTimer();
@@ -36,6 +40,20 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
   useEffect(() => {
     setTasksInputValue(localStorage.getItem('tasks') || '');
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.shiftKey && event.key === 'Enter') {
+        console.log('shift + enter')
+        event.preventDefault();
+        togglePlayPause();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -50,6 +68,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
     }
+
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+
+    console.log("creating interval")
 
     const newIntervalId = window.setInterval(() => {
       setTimeRemaining(prevTimeRemaining => {
@@ -69,7 +92,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, [tasks, currentTaskIndex]);
 
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlayingRef.current) {
       document.title = `${Math.floor(timeRemaining / 60)
         .toString()
         .padStart(2, '0')}:${(timeRemaining % 60)
@@ -78,7 +101,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     } else {
       document.title = 'Task Timer';
     }
-  }, [isPlaying, timeRemaining, tasks, currentTaskIndex]);
+  }, [isPlayingRef.current, timeRemaining, tasks, currentTaskIndex]);
 
   function isNumeric(value: string) {
     return /^-?\d+$/.test(value);
@@ -150,8 +173,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     localStorage.removeItem('tasks');
     setCurrentTaskIndex(0);
     setTimeRemaining(0);
+    isPlayingRef.current = false;
     setIsPlaying(false);
     setTasks([]);
+    editorRef.current?.setValue(" ");
 
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -168,6 +193,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function pauseTimer() {
+    isPlayingRef.current = false;
     setIsPlaying(false);
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -175,6 +201,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
+    console.log("play timer called")
     let currentTime = tasks[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks();
 
@@ -188,6 +215,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       return;
     }
 
+    console.log(parsedTasks)
+
+    isPlayingRef.current = true;
     setIsPlaying(true);
     setTasks(parsedTasks);
   }
@@ -226,6 +256,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     localStorage.setItem('notes', value ?? '');
   };
 
+  function handleEditorDidMount(editor: editor.IStandaloneCodeEditor, monaco: Monaco) {
+    editorRef.current = editor;
+  }
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
       <Box sx={{ textAlign: 'center' }}>
@@ -236,19 +270,27 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {tasks[currentTaskIndex]?.index ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ flex: '1', width: '100%', marginRight: '20px' }}>
+      <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        <Box sx={{ width: 'calc(50% - 10px)', display: "inline-block" }}>
           <Paper variant="outlined" sx={{ p: 0 }}>
-            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18, lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}, automaticLayout: true}} onChange={handleTasksInputChange}/>
+            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: { enabled: false }, fontSize: 18, lineDecorationsWidth: 0, padding: { top: 3, bottom: 3 } }} onChange={handleTasksInputChange} onMount={handleEditorDidMount} />
           </Paper>
         </Box>
-        <Box sx={{ flex: '1', width: '100%' }}>
+        <Box sx={{ width: 'calc(50% - 10px)', display: "inline-block", marginLeft: "20px" }}>
           <Paper variant="outlined" sx={{ p: 0 }}>
             <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18,  lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}, automaticLayout: true}} onChange={handleNotesInputChange}/>
           </Paper>
         </Box>
       </Box>
-      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, isPlaying, tenPercentBack }} />
+      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
+      <Paper variant="outlined" sx={{ p: 0 }}>
+        <MonacoEditor
+          height="52vh"
+          options={{ lineNumbers: "off", minimap: { enabled: false }, fontSize: 18, lineDecorationsWidth: 0, padding: { top: 3, bottom: 3 } }}
+          language="javascript"
+          theme="vs-dark"
+        />
+      </Paper>
     </Box>
   );
 }
