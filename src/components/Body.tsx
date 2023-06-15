@@ -1,19 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
-import TextField from '@mui/material/TextField';
-import { Typography, Box, Paper } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
-import Editor, { Monaco } from '@monaco-editor/react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
-import { nord } from '@uiw/codemirror-theme-nord';
-import { githubLight } from '@uiw/codemirror-theme-github';
-
-import MonacoEditor from 'react-monaco-editor';
-import { monaco } from 'react-monaco-editor';
-import { EditorView } from 'codemirror';
-import { EditorState } from '@codemirror/state';
-
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -131,8 +121,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function parseTasks(): Task[] {
+    console.log("Tasks input value: " + tasksInputValue)
+
     let lines = tasksInputValue.split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
+    console.log(lines)
     let parsedTasks: Task[] = [];
 
     parsedTasks = lines.flatMap((task, index) => {
@@ -143,14 +136,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       let time = 10 * 60;
       let rIndex = last.indexOf('r');
 
-      if (rIndex !== -1) {
+      if (rIndex !== -1 && parts.length > 1) {
         let preR = last.slice(0, rIndex);
         let postR = last.slice(rIndex + 1);
         if (!isNaN(Number(preR)) && isNumeric(postR)) {
           time = Number(preR) * 60;
           numRepeats = parseInt(postR);
         }
-      } else if (!isNaN(Number(last))){
+      } else if (!isNaN(Number(last)) && parts.length > 1){
         time = Number(last) * 60;
       } else {
         nameParts.push(last);
@@ -173,6 +166,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         }));
       }
     });
+    console.log("Parsed tasks: ")
+    console.log(parsedTasks)
     return parsedTasks;
   }
 
@@ -183,7 +178,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     isPlayingRef.current = false;
     setIsPlaying(false);
     setTasks([]);
-    // editorRef.current?.setValue("a");
 
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
