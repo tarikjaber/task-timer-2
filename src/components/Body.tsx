@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import TextField from '@mui/material/TextField';
 import { Typography, Box, Paper } from '@mui/material';
+import ReactResizeDetector from 'react-resize-detector';
 import Icons from './Icons';
 import Editor from '@monaco-editor/react';
 
@@ -236,14 +237,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ flex: '1 1 0', width: '100%', marginRight: '20px' }}>
+        <Box sx={{ flex: '1', width: '100%', marginRight: '20px' }}>
           <Paper variant="outlined" sx={{ p: 0 }}>
-            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18, lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}}} onChange={handleTasksInputChange}/>
+            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18, lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}, automaticLayout: true}} onChange={handleTasksInputChange}/>
           </Paper>
         </Box>
-        <Box sx={{ flex: '1 1 0', width: '100%' }}>
+        <Box sx={{ flex: '1', width: '100%' }}>
           <Paper variant="outlined" sx={{ p: 0 }}>
-            <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18,  lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}}} onChange={handleNotesInputChange}/>
+            <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18,  lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}, automaticLayout: true}} onChange={handleNotesInputChange}/>
           </Paper>
         </Box>
       </Box>
