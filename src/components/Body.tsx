@@ -27,7 +27,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
 
   function togglePlayPause() {
-    console.log("toggle play pause: " + isPlayingRef.current)
     if (isPlayingRef.current) {
       pauseTimer();
     } else {
@@ -40,7 +39,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.shiftKey && event.key === 'Enter') {
-        console.log('shift + enter')
         event.preventDefault();
         togglePlayPause();
       }
@@ -68,8 +66,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     isPlayingRef.current = true;
     setIsPlaying(true);
-
-    console.log("creating interval")
 
     const newIntervalId = window.setInterval(() => {
       setTimeRemaining(prevTimeRemaining => {
@@ -121,11 +117,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function parseTasks(): Task[] {
-    console.log("Tasks input value: " + tasksInputValue)
-
-    let lines = tasksInputValue.split('\n').filter(task => task.trim() !== '');
+    let lines =  (localStorage.getItem('tasks') || '').split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
-    console.log(lines)
     let parsedTasks: Task[] = [];
 
     parsedTasks = lines.flatMap((task, index) => {
@@ -166,8 +159,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         }));
       }
     });
-    console.log("Parsed tasks: ")
-    console.log(parsedTasks)
     return parsedTasks;
   }
 
@@ -202,7 +193,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
-    console.log("play timer called")
     let currentTime = tasks[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks();
 
@@ -215,8 +205,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (parsedTasks.length === 0) {
       return;
     }
-
-    console.log(parsedTasks)
 
     isPlayingRef.current = true;
     setIsPlaying(true);
