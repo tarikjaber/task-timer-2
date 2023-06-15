@@ -1,11 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
-import TextField from '@mui/material/TextField';
-import { Typography, Box, Paper } from '@mui/material';
-import ReactResizeDetector from 'react-resize-detector';
+import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
-import Editor, { Monaco, editor } from '@monaco-editor/react';
-import MonacoEditor from 'react-monaco-editor';
-import { monaco } from 'react-monaco-editor';
+import CodeMirror from '@uiw/react-codemirror';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -22,7 +20,6 @@ interface Task {
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const intervalIdRef = useRef<number | null>(null);
   const isPlayingRef = useRef<boolean>(false);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -30,7 +27,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
 
   function togglePlayPause() {
-    console.log("toggle play pause: " + isPlayingRef.current)
     if (isPlayingRef.current) {
       pauseTimer();
     } else {
@@ -43,7 +39,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.shiftKey && event.key === 'Enter') {
-        console.log('shift + enter')
         event.preventDefault();
         togglePlayPause();
       }
@@ -71,8 +66,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     isPlayingRef.current = true;
     setIsPlaying(true);
-
-    console.log("creating interval")
 
     const newIntervalId = window.setInterval(() => {
       setTimeRemaining(prevTimeRemaining => {
@@ -123,8 +116,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setTimeRemaining(updatedTimeRemaining);
   }
 
-  function parseTasks() {
-    let lines = tasksInputValue.split('\n').filter(task => task.trim() !== '');
+  function parseTasks(): Task[] {
+    let lines =  (localStorage.getItem('tasks') || '').split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
     let parsedTasks: Task[] = [];
 
@@ -136,14 +129,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       let time = 10 * 60;
       let rIndex = last.indexOf('r');
 
-      if (rIndex !== -1) {
+      if (rIndex !== -1 && parts.length > 1) {
         let preR = last.slice(0, rIndex);
         let postR = last.slice(rIndex + 1);
         if (!isNaN(Number(preR)) && isNumeric(postR)) {
           time = Number(preR) * 60;
           numRepeats = parseInt(postR);
         }
-      } else if (!isNaN(Number(last))){
+      } else if (!isNaN(Number(last)) && parts.length > 1){
         time = Number(last) * 60;
       } else {
         nameParts.push(last);
@@ -176,7 +169,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     isPlayingRef.current = false;
     setIsPlaying(false);
     setTasks([]);
-    editorRef.current?.setValue(" ");
 
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -201,7 +193,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
-    console.log("play timer called")
     let currentTime = tasks[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks();
 
@@ -214,8 +205,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (parsedTasks.length === 0) {
       return;
     }
-
-    console.log(parsedTasks)
 
     isPlayingRef.current = true;
     setIsPlaying(true);
@@ -243,21 +232,17 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
-  function handleTasksInputChange(value?: string) {
+  function tasksInputChange(value: string) {
     localStorage.setItem('tasks', value ?? '');
-    setTasksInputValue(value ?? '');
+    setTasksInputValue(value);
     pauseTimer();
     if ((value ?? '').trim() === '') {
       clearAll();
     }
-  };
+  }
 
-  function handleNotesInputChange(value?: string) {
+  function notesInputChange(value: string) {
     localStorage.setItem('notes', value ?? '');
-  };
-
-  function handleEditorDidMount(editor: editor.IStandaloneCodeEditor, monaco: Monaco) {
-    editorRef.current = editor;
   }
 
   return (
@@ -271,26 +256,28 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         </Typography>
       </Box>
       <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ width: 'calc(50% - 10px)', display: "inline-block" }}>
-          <Paper variant="outlined" sx={{ p: 0 }}>
-            <Editor defaultValue={localStorage.getItem('tasks') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: { enabled: false }, fontSize: 18, lineDecorationsWidth: 0, padding: { top: 3, bottom: 3 } }} onChange={handleTasksInputChange} onMount={handleEditorDidMount} />
-          </Paper>
-        </Box>
-        <Box sx={{ width: 'calc(50% - 10px)', display: "inline-block", marginLeft: "20px" }}>
-          <Paper variant="outlined" sx={{ p: 0 }}>
-            <Editor defaultValue={localStorage.getItem('notes') ?? undefined} height="52vh" defaultLanguage="markdown" theme={darkMode ? "vs-dark" : "light"} options={{ lineNumbers: "off", minimap: {enabled: false}, fontSize: 18,  lineDecorationsWidth: 0, padding: {top: 3, bottom: 3}, automaticLayout: true}} onChange={handleNotesInputChange}/>
-          </Paper>
+        <Box sx={{ width: "100%" }}>
+          <CodeMirror
+            value={localStorage.getItem('tasks') ?? undefined}
+            height="52vh"
+            placeholder="Enter tasks here..."
+            style={{ width: "calc(50% - 10px)", display: "inline-block", fontSize: "18px" }}
+            theme={darkMode ? 'dark' : 'light'}
+            extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+            onChange={tasksInputChange}
+          />
+          <CodeMirror
+            value = {localStorage.getItem('notes') ?? undefined}
+            placeholder="Enter notes here..."
+            height="52vh"
+            style={{ width: "calc(50% - 10px)", marginLeft: "20px", display: "inline-block", fontSize: "18px" }}
+            theme={darkMode ? 'dark' : 'light'}
+            extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+            onChange={notesInputChange}
+          />
         </Box>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
-      <Paper variant="outlined" sx={{ p: 0 }}>
-        <MonacoEditor
-          height="52vh"
-          options={{ lineNumbers: "off", minimap: { enabled: false }, fontSize: 18, lineDecorationsWidth: 0, padding: { top: 3, bottom: 3 } }}
-          language="javascript"
-          theme="vs-dark"
-        />
-      </Paper>
     </Box>
   );
 }
