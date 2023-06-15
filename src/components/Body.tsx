@@ -4,6 +4,7 @@ import Icons from './Icons';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import { Paper } from '@mui/material';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -257,24 +258,28 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       </Box>
       <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
         <Box sx={{ width: "100%" }}>
-          <CodeMirror
-            value={localStorage.getItem('tasks') ?? undefined}
-            height="52vh"
-            placeholder="Enter tasks here..."
-            style={{ width: "calc(50% - 10px)", display: "inline-block", fontSize: "18px" }}
-            theme={darkMode ? 'dark' : 'light'}
-            extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
-            onChange={tasksInputChange}
-          />
-          <CodeMirror
-            value = {localStorage.getItem('notes') ?? undefined}
-            placeholder="Enter notes here..."
-            height="52vh"
-            style={{ width: "calc(50% - 10px)", marginLeft: "20px", display: "inline-block", fontSize: "18px" }}
-            theme={darkMode ? 'dark' : 'light'}
-            extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
-            onChange={notesInputChange}
-          />
+          <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", display: "inline-block", borderRadius: 0 }}>
+            <CodeMirror
+              value={localStorage.getItem('tasks') ?? undefined}
+              height="52vh"
+              placeholder="Enter tasks here..."
+              style={{ width: "100%", fontSize: "18px" }}
+              theme={darkMode ? 'dark' : 'light'}
+              extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+              onChange={tasksInputChange}
+            />
+          </Paper>
+          <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", marginLeft: "20px", display: "inline-block", borderRadius: 0}}>
+            <CodeMirror
+              value = {localStorage.getItem('notes') ?? undefined}
+              placeholder="Enter notes here..."
+              height="52vh"
+              style={{ width: "100%", fontSize: "18px" }}
+              theme={darkMode ? 'dark' : 'light'}
+              extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+              onChange={notesInputChange}
+            />
+          </Paper>
         </Box>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
