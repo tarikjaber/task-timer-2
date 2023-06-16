@@ -28,6 +28,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
   const notesEditor = useRef<EditorView | null>(null);
+  const [inProgress, setInProgress] = useState<boolean>(false);
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -61,7 +62,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, []);
 
   useEffect(() => {
-    if (tasks.length === 0) {
+    if (!inProgress) {
       return;
     }
 
@@ -105,31 +106,30 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }, [isPlayingRef.current, timeRemaining, tasks, currentTaskIndex]);
 
-  function tPercentBack() {
-    if (tasks.length === 0) {
-      return;
-    }
-
-    const currentTask = tasks[currentTaskIndex];
-    const timeIncrement = Math.floor(currentTask.time * 0.1);
-    const newTimeRemaining = timeRemaining + timeIncrement;
-
-    // Check if the new time remaining exceeds the total task time
-    const updatedTimeRemaining = Math.min(newTimeRemaining, currentTask.time);
-
-    // Set the updated time remaining for the current task
-    setTimeRemaining(updatedTimeRemaining);
-  }
-
   function tenPercentBack() {
-    if (tasks.length === 0) {
+    if (!inProgress) {
+      if (tasks.length === 0) {
+        return;
+      }
+      setInProgress(true);
+      setIsPlaying(true);
+      let time = tasks[tasks.length - 1].time;
+      setCurrentTaskIndex(tasks.length - 1);
+      setTimeRemaining(Math.floor(time * 0.1));
+
+      const formattedTasks = tasks.map(task => {
+        return `${task.name} ${task.time / 60}`
+      })
+      const result = formattedTasks.join('\n');
+      setTasksInputValue(result);
+
       return;
     }
-  
+
     const currentTask = tasks[currentTaskIndex];
     const timeIncrement = Math.floor(currentTask.time * 0.1);
     const newTimeRemaining = timeRemaining + timeIncrement;
-  
+
     if (newTimeRemaining <= currentTask.time || currentTaskIndex === 0) {
       // Set the updated time remaining for the current task
       setTimeRemaining(Math.min(newTimeRemaining, currentTask.time));
@@ -144,16 +144,15 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       }
     }
   }
-  
 
   function clearAll() {
-    localStorage.removeItem('tasks');
-    setCurrentTaskIndex(0);
+    //localStorage.removeItem('tasks');
+    setTasksInputValue('');
     setTimeRemaining(0);
     editor.current.view?.focus();
     isPlayingRef.current = false;
     setIsPlaying(false);
-    setTasks([]);
+    setInProgress(false);
 
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -162,7 +161,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function resetCurrentTaskTime() {
-    if (tasks.length === 0) {
+    if (!inProgress) {
       return;
     }
 
@@ -191,18 +190,19 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
 
     isPlayingRef.current = true;
+    setInProgress(true);
     setIsPlaying(true);
     setTasks(parsedTasks);
   }
 
   function skipNext() {
-    if (tasks.length === 0) {
+    if (!inProgress) {
       return;
     }
+    setCurrentTaskIndex(prevIndex => prevIndex + 1);
     if (currentTaskIndex < tasks.length - 1) {
       new Notification(`"${tasks[currentTaskIndex].name}" completed, "${tasks[currentTaskIndex + 1].name}" started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
       setTimeRemaining(tasks[currentTaskIndex + 1].time);
-      setCurrentTaskIndex(prevIndex => prevIndex + 1);
     } else {
       new Notification("All tasks completed!")
       clearAll();
@@ -231,6 +231,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
   function handleCreateEditor(view: EditorView, state: EditorState) {
     view.focus();
+    // state.update({ changes: { from: 0, to: state.doc.length, insert: localStorage.getItem('tasks') ?? undefined } });
+    // console.log("Length: " + state.doc.length)
+    // view.dispatch({
+    //   changes: { from: 0, to: 0, insert: 'New Test Text' }
+    // });
+
+    setTasksInputValue(localStorage.getItem('tasks') ?? '');
     view.dispatch({selection: {anchor: state.doc.length, head: state.doc.length}})
   }
 
@@ -252,10 +259,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         <Box sx={{ width: "100%" }}>
           <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", display: "inline-block", borderRadius: 0 }}>
             <CodeMirror
-              basicSetup={{lineNumbers: false}}
+              basicSetup={{ lineNumbers: false }}
               ref={editor}
+              value={tasksInputValue}
+              //value={localStorage.getItem('tasks') ?? undefined}
               onCreateEditor={handleCreateEditor}
-              value={localStorage.getItem('tasks') ?? undefined}
               height="52vh"
               placeholder="Enter tasks here..."
               style={{ width: "100%", fontSize: "18px" }}
