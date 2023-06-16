@@ -125,6 +125,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     localStorage.removeItem('tasks');
     setCurrentTaskIndex(0);
     setTimeRemaining(0);
+    editor.current.view?.focus();
     isPlayingRef.current = false;
     setIsPlaying(false);
     setTasks([]);
