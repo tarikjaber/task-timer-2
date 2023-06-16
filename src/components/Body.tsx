@@ -27,6 +27,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const tasksRef = useRef<Task[]>([]);
   tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
+  const notesEditor = useRef<EditorView | null>(null);
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -39,10 +40,16 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   useEffect(() => {
     setTasksInputValue(localStorage.getItem('tasks') || '');
 
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.shiftKey && event.key === 'Enter') {
         event.preventDefault();
         togglePlayPause();
+      } else if (event.ctrlKey && event.key === "p") {
+        event.preventDefault();
+        notesEditor.current?.dispatch({
+          changes: {from: 0, to: notesEditor.current.state?.doc.toString().length, insert:''}
+        })
+        notesEditor.current?.focus();
       }
     };
 
@@ -201,6 +208,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     view.dispatch({selection: {anchor: state.doc.length, head: state.doc.length}})
   }
 
+  function handleCreateNotesEditor(view: EditorView, state: EditorState) {
+    notesEditor.current = view;
+  }
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
       <Box sx={{ textAlign: 'center' }}>
@@ -234,6 +245,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
               placeholder="Enter notes here..."
               height="52vh"
               style={{ width: "100%", fontSize: "18px" }}
+              onCreateEditor={handleCreateNotesEditor}
               theme={darkMode ? 'dark' : 'light'}
               extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
               onChange={notesInputChange}
