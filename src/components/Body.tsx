@@ -6,6 +6,8 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { Paper } from '@mui/material';
 import { Task, parseTasks } from '../utils';
+import { EditorView } from 'codemirror';
+import { EditorState } from '@codemirror/state';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -24,7 +26,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   tasksInputRef.current = tasksInputValue;
   const tasksRef = useRef<Task[]>([]);
   tasksRef.current = tasks;
-  const refs = useRef<ReactCodeMirrorRef>({});
+  const editor = useRef<ReactCodeMirrorRef>({});
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -194,6 +196,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     localStorage.setItem('notes', value ?? '');
   }
 
+  function handleCreateEditor(view: EditorView, state: EditorState) {
+    view.focus();
+    view.dispatch({selection: {anchor: state.doc.length, head: state.doc.length}})
+  }
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px', flexDirection: 'column' }}>
       <Box sx={{ textAlign: 'center' }}>
@@ -208,9 +215,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         <Box sx={{ width: "100%" }}>
           <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", display: "inline-block", borderRadius: 0 }}>
             <CodeMirror
-              autoFocus={true}
               basicSetup={{lineNumbers: false}}
-              ref={refs}
+              ref={editor}
+              onCreateEditor={handleCreateEditor}
               value={localStorage.getItem('tasks') ?? undefined}
               height="52vh"
               placeholder="Enter tasks here..."
