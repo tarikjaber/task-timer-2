@@ -132,7 +132,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   
     if (newTimeRemaining <= currentTask.time || currentTaskIndex === 0) {
       // Set the updated time remaining for the current task
-      setTimeRemaining(newTimeRemaining);
+      setTimeRemaining(Math.min(newTimeRemaining, currentTask.time));
     } else {
       if (currentTaskIndex > 0) {
         // Calculate the overflow amount
