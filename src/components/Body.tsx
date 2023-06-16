@@ -105,7 +105,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }, [isPlayingRef.current, timeRemaining, tasks, currentTaskIndex]);
 
-  function tenPercentBack() {
+  function tPercentBack() {
     if (tasks.length === 0) {
       return;
     }
@@ -120,6 +120,31 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     // Set the updated time remaining for the current task
     setTimeRemaining(updatedTimeRemaining);
   }
+
+  function tenPercentBack() {
+    if (tasks.length === 0) {
+      return;
+    }
+  
+    const currentTask = tasks[currentTaskIndex];
+    const timeIncrement = Math.floor(currentTask.time * 0.1);
+    const newTimeRemaining = timeRemaining + timeIncrement;
+  
+    if (newTimeRemaining <= currentTask.time || currentTaskIndex === 0) {
+      // Set the updated time remaining for the current task
+      setTimeRemaining(newTimeRemaining);
+    } else {
+      if (currentTaskIndex > 0) {
+        // Calculate the overflow amount
+        const overflowAmount = newTimeRemaining - currentTask.time;
+        // Set the overflow amount as the new time remaining
+        setTimeRemaining(overflowAmount);
+        // Go to the previous task
+        setCurrentTaskIndex(currentTaskIndex - 1);
+      }
+    }
+  }
+  
 
   function clearAll() {
     localStorage.removeItem('tasks');
