@@ -147,8 +147,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
   function clearAll() {
     //localStorage.removeItem('tasks');
+    console.log("Clear all called")
     setTasksInputValue('');
     setTimeRemaining(0);
+    setCurrentTaskIndex(0);
     editor.current.view?.focus();
     isPlayingRef.current = false;
     setIsPlaying(false);
@@ -252,7 +254,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
         <Typography variant="h3" gutterBottom sx={{ mb: 2 }}>
-          {tasks[currentTaskIndex]?.index ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
+          {(tasks[currentTaskIndex]?.index && inProgress) ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
         </Typography>
       </Box>
       <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>

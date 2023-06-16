@@ -10,7 +10,7 @@ export function isNumeric(value: string) {
 }
 
 export function parseTasks(tasksValue: string): Task[] {
-    let lines =  (localStorage.getItem('tasks') || '').split('\n').filter(task => task.trim() !== '');
+    let lines =  tasksValue.split('\n').filter(task => task.trim() !== '');
     lines = lines.map(task => task.trim()).map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
     let parsedTasks: Task[] = [];
 
