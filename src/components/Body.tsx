@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
 import CodeMirror from '@uiw/react-codemirror';
@@ -20,6 +20,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
+  const tasksInputRef = useRef<string>();
+  tasksInputRef.current = tasksInputValue;
+  const tasksRef = useRef<Task[]>([]);
+  tasksRef.current = tasks;
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -138,9 +142,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
-    let currentTime = tasks[currentTaskIndex]?.time || 0;
-    const parsedTasks = parseTasks(tasksInputValue);
-
+    let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
+    const parsedTasks = parseTasks(tasksInputRef.current ?? "");
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
 
     if (currentTime !== nextTime) {
