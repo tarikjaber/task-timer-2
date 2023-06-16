@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { Paper } from '@mui/material';
@@ -24,6 +24,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   tasksInputRef.current = tasksInputValue;
   const tasksRef = useRef<Task[]>([]);
   tasksRef.current = tasks;
+  const refs = useRef<ReactCodeMirrorRef>({});
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -207,6 +208,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         <Box sx={{ width: "100%" }}>
           <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", display: "inline-block", borderRadius: 0 }}>
             <CodeMirror
+              autoFocus={true}
+              basicSetup={{lineNumbers: false}}
+              ref={refs}
               value={localStorage.getItem('tasks') ?? undefined}
               height="52vh"
               placeholder="Enter tasks here..."
@@ -218,6 +222,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           </Paper>
           <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", marginLeft: "20px", display: "inline-block", borderRadius: 0}}>
             <CodeMirror
+              basicSetup={{lineNumbers: false}}
               value = {localStorage.getItem('notes') ?? undefined}
               placeholder="Enter notes here..."
               height="52vh"
