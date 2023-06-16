@@ -5,7 +5,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { Paper } from '@mui/material';
-import { Task, parseTasks } from '../utils/utils';
+import { Task, parseTasks } from '../utils';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -139,7 +139,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
   function playTimer() {
     let currentTime = tasks[currentTaskIndex]?.time || 0;
-    const parsedTasks = parseTasks(localStorage.getItem('tasks') || '');
+    const parsedTasks = parseTasks(tasksInputValue);
 
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
 
