@@ -115,7 +115,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setIsPlaying(true);
       let time = tasks[tasks.length - 1].time;
       setCurrentTaskIndex(tasks.length - 1);
-      setTimeRemaining(Math.floor(time * 0.1));
+      setTimeRemaining(Math.ceil(time * 0.1));
 
       const formattedTasks = tasks.map(task => {
         return `${task.name} ${task.time / 60}`
@@ -127,7 +127,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
 
     const currentTask = tasks[currentTaskIndex];
-    const timeIncrement = Math.floor(currentTask.time * 0.1);
+    const timeIncrement = Math.ceil(currentTask.time * 0.1);
     const newTimeRemaining = timeRemaining + timeIncrement;
 
     if (newTimeRemaining <= currentTask.time || currentTaskIndex === 0) {
@@ -254,7 +254,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
         <Typography variant="h3" gutterBottom sx={{ mb: 2 }}>
-          {(tasks[currentTaskIndex]?.index && inProgress) ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})` : tasks[currentTaskIndex]?.name || 'Task Timer'}
+          {inProgress ? (
+            tasks[currentTaskIndex]?.index
+              ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
+              : tasks[currentTaskIndex]?.name || 'Task Timer'
+          ) : 'Task Timer'}
         </Typography>
       </Box>
       <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
