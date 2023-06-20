@@ -27,7 +27,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const tasksRef = useRef<Task[]>([]);
   tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
-  const notesEditor = useRef<EditorView | null>(null);
   const [inProgress, setInProgress] = useState<boolean>(false);
 
   function togglePlayPause() {
@@ -45,12 +44,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       if (event.shiftKey && event.key === 'Enter') {
         event.preventDefault();
         togglePlayPause();
-      } else if (event.ctrlKey && event.key === "p") {
-        event.preventDefault();
-        notesEditor.current?.dispatch({
-          changes: {from: 0, to: notesEditor.current.state?.doc.toString().length, insert:''}
-        })
-        notesEditor.current?.focus();
       }
     };
 
@@ -146,8 +139,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function clearAll() {
-    //localStorage.removeItem('tasks');
-    console.log("Clear all called")
     setTasksInputValue('');
     setTimeRemaining(0);
     setCurrentTaskIndex(0);
@@ -227,24 +218,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
-  function notesInputChange(value: string) {
-    localStorage.setItem('notes', value ?? '');
-  }
-
   function handleCreateEditor(view: EditorView, state: EditorState) {
     view.focus();
-    // state.update({ changes: { from: 0, to: state.doc.length, insert: localStorage.getItem('tasks') ?? undefined } });
-    // console.log("Length: " + state.doc.length)
-    // view.dispatch({
-    //   changes: { from: 0, to: 0, insert: 'New Test Text' }
-    // });
-
     setTasksInputValue(localStorage.getItem('tasks') ?? '');
     view.dispatch({selection: {anchor: state.doc.length, head: state.doc.length}})
-  }
-
-  function handleCreateNotesEditor(view: EditorView, state: EditorState) {
-    notesEditor.current = view;
   }
 
   return (
@@ -261,37 +238,21 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           ) : 'Task Timer'}
         </Typography>
       </Box>
-      <Box sx={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Box sx={{ width: "100%" }}>
-          <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", display: "inline-block", borderRadius: 0 }}>
-            <CodeMirror
-              basicSetup={{ lineNumbers: false }}
-              ref={editor}
-              value={tasksInputValue}
-              //value={localStorage.getItem('tasks') ?? undefined}
-              onCreateEditor={handleCreateEditor}
-              height="52vh"
-              placeholder="Enter tasks here..."
-              style={{ width: "100%", fontSize: "18px" }}
-              theme={darkMode ? 'dark' : 'light'}
-              extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
-              onChange={tasksInputChange}
-            />
-          </Paper>
-          <Paper variant="outlined" sx={{ p: 0, width: "calc(50% - 10px)", marginLeft: "20px", display: "inline-block", borderRadius: 0}}>
-            <CodeMirror
-              basicSetup={{lineNumbers: false}}
-              value = {localStorage.getItem('notes') ?? undefined}
-              placeholder="Enter notes here..."
-              height="52vh"
-              style={{ width: "100%", fontSize: "18px" }}
-              onCreateEditor={handleCreateNotesEditor}
-              theme={darkMode ? 'dark' : 'light'}
-              extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
-              onChange={notesInputChange}
-            />
-          </Paper>
-        </Box>
+      <Box sx={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+        <Paper variant="outlined" sx={{ p: 0, width: "100%", display: "inline-block", borderRadius: 0 }}>
+          <CodeMirror
+            basicSetup={{ lineNumbers: false }}
+            ref={editor}
+            value={tasksInputValue}
+            onCreateEditor={handleCreateEditor}
+            height="52vh"
+            placeholder="Enter tasks here..."
+            style={{ width: "100%", fontSize: "18px" }}
+            theme={darkMode ? 'dark' : 'light'}
+            extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+            onChange={tasksInputChange}
+          />
+        </Paper>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
     </Box>
