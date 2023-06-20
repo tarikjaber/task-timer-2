@@ -11,7 +11,7 @@ export function isNumeric(value: string) {
 
 export function parseTasks(tasksValue: string): Task[] {
     let lines =  tasksValue.split('\n').map(task => task.trim()).filter(task => task !== '').filter(task => task.search(/^#{1,6}\s/) < 0);
-    lines = lines.map(line => line.replace(/^- \[\s\] /, '').replace(/^- \[\s[xX]\] /, '').replace(/^- /, ''));
+    lines = lines.map(line => line.replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, ""));
     let parsedTasks: Task[] = [];
 
     parsedTasks = lines.flatMap(task => {

@@ -24,6 +24,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
   const tasksInputRef = useRef<string>();
   tasksInputRef.current = tasksInputValue;
+  const tempInputRef = useRef<string>();
   const tasksRef = useRef<Task[]>([]);
   tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
@@ -92,8 +93,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       document.title = `${Math.floor(timeRemaining / 60)
         .toString()
         .padStart(2, '0')}:${(timeRemaining % 60)
-        .toString()
-        .padStart(2, '0')} - ${tasks[currentTaskIndex]?.name || 'Task Timer'}`;
+          .toString()
+          .padStart(2, '0')} - ${tasks[currentTaskIndex]?.name || 'Task Timer'}`;
     } else {
       document.title = 'Task Timer';
     }
@@ -110,11 +111,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setCurrentTaskIndex(tasks.length - 1);
       setTimeRemaining(Math.ceil(time * 0.1));
 
-      const formattedTasks = tasks.map(task => {
-        return `${task.name} ${task.time / 60}`
-      })
-      const result = formattedTasks.join('\n');
-      setTasksInputValue(result);
+      setTasksInputValue(tempInputRef.current ?? '');
 
       return;
     }
@@ -182,6 +179,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       return;
     }
 
+
+    let newTasksInputValue = tasksInputRef.current?.split('\n')
+      .map(task => task.trim().replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, "")).join('\n') ?? '';
+
+    tempInputRef.current = newTasksInputValue;
+
+    setTasksInputValue(newTasksInputValue);
+
     isPlayingRef.current = true;
     setInProgress(true);
     setIsPlaying(true);
@@ -221,7 +226,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   function handleCreateEditor(view: EditorView, state: EditorState) {
     view.focus();
     setTasksInputValue(localStorage.getItem('tasks') ?? '');
-    view.dispatch({selection: {anchor: state.doc.length, head: state.doc.length}})
+    view.dispatch({ selection: { anchor: state.doc.length, head: state.doc.length } })
   }
 
   return (
