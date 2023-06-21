@@ -86,7 +86,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return () => {
       clearInterval(newIntervalId);
     };
-  }, [tasks, currentTaskIndex]);
+  }, [tasks, currentTaskIndex, tenPercentBack]);
 
   useEffect(() => {
     if (isPlayingRef.current) {
@@ -178,7 +178,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (parsedTasks.length === 0) {
       return;
     }
-
 
     let newTasksInputValue = tasksInputRef.current?.split('\n')
       .map(task => task.trim().replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, "")).join('\n') ?? '';
