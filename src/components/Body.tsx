@@ -20,6 +20,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const timeRemainingRef = useRef<number>(0);
+  timeRemainingRef.current = timeRemaining;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
   const tasksInputRef = useRef<string>();
@@ -29,6 +31,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
   const [inProgress, setInProgress] = useState<boolean>(false);
+  const inProgressRef = useRef<boolean>(false);
+  inProgressRef.current = inProgress;
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -55,13 +59,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!inProgress) {
+  const startInterval = useCallback(async () => {
+    if (!inProgressRef.current) {
       return;
     }
 
-    if (timeRemaining <= 0) {
-      setTimeRemaining(tasks[0].time);
+    if (timeRemainingRef.current <= 0) {
+      setTimeRemaining(tasksRef.current[0].time);
     }
 
     if (intervalIdRef.current) {
@@ -86,7 +90,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return () => {
       clearInterval(newIntervalId);
     };
-  }, [tasks, currentTaskIndex, tenPercentBack]);
+  }, []);
+
+  useEffect(() => {
+    startInterval();
+  }, [tasks, currentTaskIndex]);
 
   useEffect(() => {
     if (isPlayingRef.current) {
@@ -101,17 +109,20 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, [isPlayingRef.current, timeRemaining, tasks, currentTaskIndex]);
 
   function tenPercentBack() {
-    if (!inProgress) {
+    if (!inProgressRef.current) {
       if (tasks.length === 0) {
         return;
       }
       setInProgress(true);
+      inProgressRef.current = true;
       setIsPlaying(true);
       let time = tasks[tasks.length - 1].time;
       setCurrentTaskIndex(tasks.length - 1);
       setTimeRemaining(Math.ceil(time * 0.1));
+      timeRemainingRef.current = Math.ceil(time * 0.1);
 
       setTasksInputValue(tempInputRef.current ?? '');
+      startInterval();
 
       return;
     }
