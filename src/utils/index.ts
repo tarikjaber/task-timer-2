@@ -28,6 +28,8 @@ export function parseTasks(tasksValue: string): Task[] {
             if (!isNaN(Number(preR)) && isNumeric(postR)) {
                 time = Number(preR) * 60;
                 numRepeats = parseInt(postR);
+            } else {
+                nameParts.push(last);
             }
         } else if (!isNaN(Number(last)) && parts.length > 1) {
             time = Number(last) * 60;
