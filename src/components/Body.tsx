@@ -182,7 +182,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   function playTimer() {
     let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks(tasksInputRef.current ?? "");
-    console.log("parsed tasks: ", parsedTasks);
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
 
     if (currentTime !== nextTime) {
