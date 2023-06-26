@@ -19,6 +19,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const isPlayingRef = useRef<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
+  const currentTaskIndexRef = useRef<number>(0);
+  currentTaskIndexRef.current = currentTaskIndex;
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const timeRemainingRef = useRef<number>(0);
   timeRemainingRef.current = timeRemaining;
@@ -208,14 +210,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       return;
     }
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
-    if (currentTaskIndex < tasks.length - 1) {
-      new Notification(`"${tasks[currentTaskIndex].name}" completed, "${tasks[currentTaskIndex + 1].name}" started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
-      setTimeRemaining(tasks[currentTaskIndex + 1].time);
+    if (currentTaskIndexRef.current < tasksRef.current.length - 1) {
+      new Notification(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      setTimeRemaining(tasksRef.current[currentTaskIndex + 1].time);
     } else {
       new Notification("All tasks completed!")
       clearAll();
     }
-  } // test2
+  }
 
   function skipPrevious() {
     if (currentTaskIndex > 0) {
