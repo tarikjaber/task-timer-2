@@ -215,7 +215,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       new Notification("All tasks completed!")
       clearAll();
     }
-  } // test
+  } // test2
 
   function skipPrevious() {
     if (currentTaskIndex > 0) {
