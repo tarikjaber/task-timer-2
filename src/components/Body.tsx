@@ -144,7 +144,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       }
     }
   }
-  
 
   function clearAll() {
     localStorage.removeItem('tasks');
