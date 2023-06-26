@@ -204,7 +204,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function skipNext() {
-    if (!inProgress) {
+    if (!inProgressRef.current) {
       return;
     }
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
@@ -215,7 +215,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       new Notification("All tasks completed!")
       clearAll();
     }
-  }
+  } // test
 
   function skipPrevious() {
     if (currentTaskIndex > 0) {
