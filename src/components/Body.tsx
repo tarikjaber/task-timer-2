@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
@@ -11,13 +10,6 @@ import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
-
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
-  props,
-  ref,
-) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -304,9 +296,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+        <MuiAlert onClose={() => setSnackbarOpen(false)} severity="success" elevation={6} variant="filled" sx={{ width: '100%' }}>
           {snackbarMessage}
-        </Alert>
+        </MuiAlert>
       </Snackbar>
     </Box>
   );
