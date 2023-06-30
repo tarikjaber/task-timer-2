@@ -66,7 +66,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       }
     };
 
+    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
+      console.log("before unload called")
+      localStorage.setItem('tasks', tasksInputRef.current ?? '');
+    }
+
     document.addEventListener('keydown', handleKeyDown);
+    window.onbeforeunload = handleBeforeUnload;
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -243,12 +249,21 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function tasksInputChange(value: string) {
-    localStorage.setItem('tasks', value ?? '');
-    setTasksInputValue(value);
-    pauseTimer();
+    if (isPlayingRef.current) {
+      pauseTimer();
+    }
     if ((value ?? '').trim() === '') {
       clearAll();
     }
+
+    if (value.length === 1) {
+      if ((tasksInputRef.current ?? "").length > 1) {
+        clearAll();
+      }
+    }
+
+    setTasksInputValue(value);
+    tasksInputRef.current = value;
   }
 
   function handleCreateEditor(view: EditorView, state: EditorState) {
