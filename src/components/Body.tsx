@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Typography, Box } from '@mui/material';
 import Icons from './Icons';
@@ -8,6 +9,15 @@ import { Paper } from '@mui/material';
 import { Task, parseTasks } from '../utils';
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
+
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+  props,
+  ref,
+) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -35,6 +45,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [inProgress, setInProgress] = useState<boolean>(false);
   const inProgressRef = useRef<boolean>(false);
   inProgressRef.current = inProgress;
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -212,9 +224,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
     if (currentTaskIndexRef.current < tasksRef.current.length - 1) {
       new Notification(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      setSnackbarMessage(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`);
+      setSnackbarOpen(true);
       setTimeRemaining(tasksRef.current[currentTaskIndex + 1].time);
     } else {
       new Notification("All tasks completed!")
+      setSnackbarMessage("All tasks completed!");
+      setSnackbarOpen(true);
       clearAll();
     }
   }
@@ -272,6 +288,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         </Paper>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
