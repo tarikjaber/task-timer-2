@@ -18,21 +18,21 @@ interface BodyProps {
 
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const intervalIdRef = useRef<number | null>(null);
-  const isPlayingRef = useRef<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const isPlayingRef = useRef<boolean>(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const currentTaskIndexRef = useRef<number>(0);
   currentTaskIndexRef.current = currentTaskIndex;
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const timeRemainingRef = useRef<number>(0);
   timeRemainingRef.current = timeRemaining;
+  const tasksRef = useRef<Task[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  tasksRef.current = tasks;
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
   const tasksInputRef = useRef<string>();
   tasksInputRef.current = tasksInputValue;
   const tempInputRef = useRef<string>();
-  const tasksRef = useRef<Task[]>([]);
-  tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
   const [inProgress, setInProgress] = useState<boolean>(false);
   const inProgressRef = useRef<boolean>(false);
