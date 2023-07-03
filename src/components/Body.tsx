@@ -122,6 +122,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       timeRemainingRef.current = Math.ceil(time * 0.1);
 
       setTasksInputValue(tempInputRef.current ?? '');
+
       startInterval();
 
       return;
