@@ -8,6 +8,8 @@ import { Paper } from '@mui/material';
 import { Task, parseTasks } from '../utils';
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -16,23 +18,27 @@ interface BodyProps {
 
 function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const intervalIdRef = useRef<number | null>(null);
-  const isPlayingRef = useRef<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const isPlayingRef = useRef<boolean>(false);
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
+  const currentTaskIndexRef = useRef<number>(0);
+  currentTaskIndexRef.current = currentTaskIndex;
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const timeRemainingRef = useRef<number>(0);
   timeRemainingRef.current = timeRemaining;
+  const tasksRef = useRef<Task[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  tasksRef.current = tasks;
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
   const tasksInputRef = useRef<string>();
   tasksInputRef.current = tasksInputValue;
   const tempInputRef = useRef<string>();
-  const tasksRef = useRef<Task[]>([]);
-  tasksRef.current = tasks;
   const editor = useRef<ReactCodeMirrorRef>({});
   const [inProgress, setInProgress] = useState<boolean>(false);
   const inProgressRef = useRef<boolean>(false);
   inProgressRef.current = inProgress;
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -52,7 +58,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       }
     };
 
+    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
+      console.log("before unload called")
+      localStorage.setItem('tasks', tasksInputRef.current ?? '');
+    }
+
     document.addEventListener('keydown', handleKeyDown);
+    window.onbeforeunload = handleBeforeUnload;
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -205,15 +217,19 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function skipNext() {
-    if (!inProgress) {
+    if (!inProgressRef.current) {
       return;
     }
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
-    if (currentTaskIndex < tasks.length - 1) {
-      new Notification(`"${tasks[currentTaskIndex].name}" completed, "${tasks[currentTaskIndex + 1].name}" started for ${tasks[currentTaskIndex + 1].time / 60} minute${tasks[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
-      setTimeRemaining(tasks[currentTaskIndex + 1].time);
+    if (currentTaskIndexRef.current < tasksRef.current.length - 1) {
+      new Notification(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      setSnackbarMessage(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`);
+      setSnackbarOpen(true);
+      setTimeRemaining(tasksRef.current[currentTaskIndex + 1].time);
     } else {
       new Notification("All tasks completed!")
+      setSnackbarMessage("All tasks completed!");
+      setSnackbarOpen(true);
       clearAll();
     }
   }
@@ -226,12 +242,21 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function tasksInputChange(value: string) {
-    localStorage.setItem('tasks', value ?? '');
-    setTasksInputValue(value);
-    pauseTimer();
+    if (isPlayingRef.current) {
+      pauseTimer();
+    }
     if ((value ?? '').trim() === '') {
       clearAll();
     }
+
+    if (value.length === 1) {
+      if ((tasksInputRef.current ?? "").length > 1) {
+        clearAll();
+      }
+    }
+
+    setTasksInputValue(value);
+    tasksInputRef.current = value;
   }
 
   function handleCreateEditor(view: EditorView, state: EditorState) {
@@ -271,6 +296,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         </Paper>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <MuiAlert onClose={() => setSnackbarOpen(false)} severity="success" elevation={6} variant="filled" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 }
