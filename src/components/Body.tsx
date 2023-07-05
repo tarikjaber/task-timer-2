@@ -95,7 +95,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         }
         return newTimeRemaining;
       });
-    }, 1000);
+    }, 250);
 
     intervalIdRef.current = newIntervalId;
 
@@ -221,10 +221,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
     if (currentTaskIndexRef.current < tasksRef.current.length - 1) {
-      new Notification(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
-      setSnackbarMessage(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`);
+      new Notification(`"${tasksRef.current[currentTaskIndexRef.current].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
+      setSnackbarMessage(`"${tasksRef.current[currentTaskIndexRef.current].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`);
       setSnackbarOpen(true);
-      setTimeRemaining(tasksRef.current[currentTaskIndex + 1].time);
+      setTimeRemaining(tasksRef.current[currentTaskIndexRef.current + 1].time);
     } else {
       new Notification("All tasks completed!")
       setSnackbarMessage("All tasks completed!");
