@@ -95,7 +95,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         }
         return newTimeRemaining;
       });
-    }, 250);
+    }, 1000);
 
     intervalIdRef.current = newIntervalId;
 
@@ -219,15 +219,30 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (!inProgressRef.current) {
       return;
     }
+  
+    const currentTaskIndex = currentTaskIndexRef.current;
+    const tasks = tasksRef.current;
+    const nextTaskIndex = currentTaskIndex + 1;
+  
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
-    if (currentTaskIndexRef.current < tasksRef.current.length - 1) {
-      new Notification(`"${tasksRef.current[currentTaskIndexRef.current].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
-      setSnackbarMessage(`"${tasksRef.current[currentTaskIndexRef.current].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`);
+  
+    if (nextTaskIndex < tasks.length) {
+      const currentTask = tasks[currentTaskIndex];
+      const nextTask = tasks[nextTaskIndex];
+      const minutes = nextTask.time / 60;
+      const pluralSuffix = minutes === 1 ? '' : 's';
+      const notificationMessage = `"${currentTask.name}" completed, "${nextTask.name}" started for ${minutes} minute${pluralSuffix}`;
+  
+      console.log("sending notification")
+      new Notification(notificationMessage);
+      setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
-      setTimeRemaining(tasksRef.current[currentTaskIndexRef.current + 1].time);
+      setTimeRemaining(nextTask.time);
     } else {
-      new Notification("All tasks completed!")
-      setSnackbarMessage("All tasks completed!");
+      const notificationMessage = "All tasks completed!";
+  
+      new Notification(notificationMessage);
+      setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
       clearAll();
     }
