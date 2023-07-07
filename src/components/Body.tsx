@@ -285,7 +285,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         <Typography variant="h1" gutterBottom sx={{ mb: -1, fontWeight: 'bold', mt: -2, fontSize: '120px' }}>
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
-        <Typography variant="h3" gutterBottom sx={{ mb: 2 }}>
+        <Typography variant="h3" gutterBottom sx={{ mb: 2, p: "0 20px" }} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100vw', overflowWrap: 'break-word' }}>
           {inProgress ? (
             tasks[currentTaskIndex]?.index
               ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
