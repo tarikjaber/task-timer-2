@@ -54,7 +54,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     const tasks: string | null = urlParams.get('tasks');
 
     if (tasks) {
-      console.log("setting tasks input value to: ", tasks)
       setTasksInputValue(tasks);
       tasksInputRef.current = tasks;
       localStorage.setItem('tasks', tasks);
@@ -71,7 +70,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
 
     const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
-      console.log("before unload called")
       localStorage.setItem('tasks', tasksInputRef.current ?? '');
     }
 
@@ -207,12 +205,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
-    console.log("play timer called")
     let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks(tasksInputRef.current ?? "");
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
-    console.log(parsedTasks)
-    console.log("Next time: ", nextTime)
 
     if (currentTime !== nextTime) {
       setTimeRemaining(nextTime);
@@ -255,7 +250,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       const nextIndexText = nextTask.index ? ` (${nextTask.index})` : '';
       const notificationMessage = `"${currentTask.name}${previousIndexText}" completed, "${nextTask.name}${nextIndexText}" started for ${minutes} minute${pluralSuffix}`;
 
-      console.log("sending notification")
       new Notification(notificationMessage);
       setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
