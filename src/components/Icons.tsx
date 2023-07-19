@@ -11,7 +11,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import PercentIcon from '@mui/icons-material/Percent';
 
 interface IconsProps {
-  clearAll: () => void;
+  clearAll: (clearInput: boolean) => void;
   resetCurrentTaskTime: () => void;
   toggleDarkMode: () => void;
   playTimer (): void;
@@ -27,7 +27,7 @@ function Icons({ toggleDarkMode, clearAll, resetCurrentTaskTime, playTimer, paus
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
       <Tooltip title="Clear all tasks and task input">
-        <IconButton aria-label="Clear all tasks and task input" onClick={clearAll}>
+        <IconButton aria-label="Clear all tasks and task input" onClick={() => clearAll(true)}>
           <ClearIcon sx={{ fontSize: 50 }} />
         </IconButton>
       </Tooltip>

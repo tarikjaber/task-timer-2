@@ -10,6 +10,7 @@ import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import { time } from 'console';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -32,7 +33,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
   const tasksInputRef = useRef<string>();
   tasksInputRef.current = tasksInputValue;
-  const tempInputRef = useRef<string>();
   const editor = useRef<ReactCodeMirrorRef>({});
   const [inProgress, setInProgress] = useState<boolean>(false);
   const inProgressRef = useRef<boolean>(false);
@@ -40,6 +40,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const startTimeRef = useRef<number>(0);
+  const [completedAllTasks, setCompletedAllTasks] = useState<boolean>(false);
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -81,7 +82,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
   }, []);
 
-  const startInterval = useCallback(() => {
+  const startInterval = useCallback((resetTaskTime: boolean) => {
     if (!inProgressRef.current) {
       return;
     }
@@ -97,7 +98,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     isPlayingRef.current = true;
     setIsPlaying(true);
 
-    startTimeRef.current = Date.now(); // Store the start time
+    if (resetTaskTime) {
+      startTimeRef.current = Date.now(); // Store the start time
+    } else {
+      startTimeRef.current = Date.now() - (tasksRef.current[currentTaskIndexRef.current].time - timeRemainingRef.current) * 1000;
+    }
 
     const newIntervalId = window.setInterval(() => {
       const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
@@ -119,7 +124,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, []);
 
   useEffect(() => {
-    startInterval();
+    startInterval(false);
   }, [tasks, currentTaskIndex]);
 
   useEffect(() => {
@@ -144,12 +149,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setIsPlaying(true);
       let time = tasks[tasks.length - 1].time;
       setCurrentTaskIndex(tasks.length - 1);
+      currentTaskIndexRef.current = tasks.length - 1;
       setTimeRemaining(Math.ceil(time * 0.1));
       timeRemainingRef.current = Math.ceil(time * 0.1);
 
-      setTasksInputValue(tempInputRef.current ?? '');
-
-      startInterval();
+      startInterval(false);
 
       return;
     }
@@ -161,26 +165,33 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (newTimeRemaining <= currentTask.time || currentTaskIndex === 0) {
       // Set the updated time remaining for the current task
       setTimeRemaining(Math.min(newTimeRemaining, currentTask.time));
+      timeRemainingRef.current = Math.min(newTimeRemaining, currentTask.time);
     } else {
       if (currentTaskIndex > 0) {
         // Calculate the overflow amount
         const overflowAmount = newTimeRemaining - currentTask.time;
         // Set the overflow amount as the new time remaining
         setTimeRemaining(overflowAmount);
+        timeRemainingRef.current = overflowAmount;
         // Go to the previous task
         setCurrentTaskIndex(currentTaskIndex - 1);
       }
     }
+    startInterval(false);
   }
 
-  function clearAll() {
-    setTasksInputValue('');
-    setTimeRemaining(0);
-    setCurrentTaskIndex(0);
+  function clearAll(clearInput: boolean) {
+    if (clearInput) {
+      setTasksInputValue('');
+    }
+    setInProgress(false);
+    inProgressRef.current = false;
     editor.current.view?.focus();
     isPlayingRef.current = false;
     setIsPlaying(false);
     setInProgress(false);
+    setTimeRemaining(0);
+    timeRemainingRef.current = 0;
 
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -194,6 +205,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
 
     setTimeRemaining(tasks[currentTaskIndex].time);
+    startInterval(true);
   }
 
   function pauseTimer() {
@@ -205,6 +217,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
+    console.log('playtimer')
     let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks(tasksInputRef.current ?? "");
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
@@ -220,8 +233,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     let newTasksInputValue = tasksInputRef.current?.split('\n')
       .map(task => task.trim().replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, "")).join('\n') ?? '';
 
-    tempInputRef.current = newTasksInputValue;
-
     setTasksInputValue(newTasksInputValue);
 
     isPlayingRef.current = true;
@@ -229,6 +240,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setIsPlaying(true);
     setTasks(parsedTasks);
   }
+
+  useEffect(() => {
+    if (currentTaskIndex >= tasks.length && tasks.length > 0) {
+      setCompletedAllTasks(true);
+    } else {
+      setCompletedAllTasks(false);
+    }
+  }, [currentTaskIndex, tasks]);
 
   function skipNext() {
     if (!inProgressRef.current) {
@@ -260,14 +279,19 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       new Notification(notificationMessage);
       setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
-      clearAll();
+      clearAll(false);
     }
   }
 
   function skipPrevious() {
     if (currentTaskIndex > 0) {
       setTimeRemaining(tasks[currentTaskIndex - 1].time);
+      timeRemainingRef.current = tasks[currentTaskIndex - 1].time;
       setCurrentTaskIndex(currentTaskIndex - 1);
+      currentTaskIndexRef.current = currentTaskIndex - 1;
+      setInProgress(true);
+      inProgressRef.current = true;
+      startInterval(true);
     }
   }
 
@@ -276,16 +300,15 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       pauseTimer();
     }
     if ((value ?? '').trim() === '') {
-      clearAll();
+      clearAll(true);
     }
 
     if (value.length === 1) {
       if ((tasksInputRef.current ?? "").length > 1) {
-        clearAll();
+        clearAll(true);
       }
     }
 
-    setTasksInputValue(value);
     tasksInputRef.current = value;
   }
 
@@ -301,13 +324,19 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         <Typography variant="h1" gutterBottom sx={{ mb: -1, fontWeight: 'bold', mt: -2, fontSize: '120px' }}>
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
-        <Typography variant="h3" gutterBottom sx={{ mb: 2, p: "0 20px" }} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100vw', overflowWrap: 'break-word' }}>
-          {inProgress ? (
-            tasks[currentTaskIndex]?.index
-              ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
-              : tasks[currentTaskIndex]?.name || 'Task Timer'
-          ) : 'Task Timer'}
-        </Typography>
+        {completedAllTasks ?
+          <Typography variant="h3" color="success.main" sx={{ mb: 2 }}>
+            Completed All Tasks
+          </Typography>
+          :
+          <Typography variant="h3" gutterBottom sx={{ mb: 2, p: "0 20px" }} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100vw', overflowWrap: 'break-word' }}>
+            {inProgress ? (
+              tasks[currentTaskIndex]?.index
+                ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
+                : tasks[currentTaskIndex]?.name || 'Task Timer'
+            ) : 'Task Timer'}
+          </Typography>
+        }
       </Box>
       <Box sx={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         <Paper variant="outlined" sx={{ p: 0, width: "100%", display: "inline-block", borderRadius: 0 }}>
@@ -331,7 +360,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
-    </Box>
+      </Box>
   );
 }
 
