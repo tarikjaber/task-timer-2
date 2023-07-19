@@ -50,7 +50,18 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   useEffect(() => {
-    setTasksInputValue(localStorage.getItem('tasks') || '');
+    const urlParams = new URLSearchParams(window.location.search);
+    const tasks: string | null = urlParams.get('tasks');
+
+    if (tasks) {
+      console.log("setting tasks input value to: ", tasks)
+      setTasksInputValue(tasks);
+      tasksInputRef.current = tasks;
+      localStorage.setItem('tasks', tasks);
+      playTimer();
+    } else {
+      setTasksInputValue(localStorage.getItem('tasks') || '');
+    }
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.shiftKey && event.key === 'Enter') {
@@ -76,24 +87,24 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (!inProgressRef.current) {
       return;
     }
-  
+
     if (timeRemainingRef.current <= 0) {
       setTimeRemaining(tasksRef.current[0].time);
     }
-  
+
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
     }
-  
+
     isPlayingRef.current = true;
     setIsPlaying(true);
-  
+
     startTimeRef.current = Date.now(); // Store the start time
-  
+
     const newIntervalId = window.setInterval(() => {
       const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
       const newTimeRemaining = tasksRef.current[currentTaskIndexRef.current]?.time - elapsedTime;
-  
+
       setTimeRemaining(prevTimeRemaining => {
         if (newTimeRemaining <= 0) {
           skipNext();
@@ -101,14 +112,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         return newTimeRemaining;
       });
     }, 1000);
-  
+
     intervalIdRef.current = newIntervalId;
-  
+
     return () => {
       clearInterval(newIntervalId);
     };
   }, []);
-  
+
   useEffect(() => {
     startInterval();
   }, [tasks, currentTaskIndex]);
@@ -196,9 +207,12 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function playTimer() {
+    console.log("play timer called")
     let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
     const parsedTasks = parseTasks(tasksInputRef.current ?? "");
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
+    console.log(parsedTasks)
+    console.log("Next time: ", nextTime)
 
     if (currentTime !== nextTime) {
       setTimeRemaining(nextTime);
@@ -225,20 +239,22 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (!inProgressRef.current) {
       return;
     }
-  
+
     const currentTaskIndex = currentTaskIndexRef.current;
     const tasks = tasksRef.current;
     const nextTaskIndex = currentTaskIndex + 1;
-  
+
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
-  
+
     if (nextTaskIndex < tasks.length) {
       const currentTask = tasks[currentTaskIndex];
       const nextTask = tasks[nextTaskIndex];
       const minutes = nextTask.time / 60;
       const pluralSuffix = minutes === 1 ? '' : 's';
-      const notificationMessage = `"${currentTask.name}" completed, "${nextTask.name}" started for ${minutes} minute${pluralSuffix}`;
-  
+      const previousIndexText = currentTask.index ? ` (${currentTask.index})` : '';
+      const nextIndexText = nextTask.index ? ` (${nextTask.index})` : '';
+      const notificationMessage = `"${currentTask.name}${previousIndexText}" completed, "${nextTask.name}${nextIndexText}" started for ${minutes} minute${pluralSuffix}`;
+
       console.log("sending notification")
       new Notification(notificationMessage);
       setSnackbarMessage(notificationMessage);
@@ -246,7 +262,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setTimeRemaining(nextTask.time);
     } else {
       const notificationMessage = "All tasks completed!";
-  
+
       new Notification(notificationMessage);
       setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
