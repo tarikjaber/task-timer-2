@@ -39,6 +39,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   inProgressRef.current = inProgress;
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const startTimeRef = useRef<number>(0);
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -71,39 +72,43 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
   }, []);
 
-  const startInterval = useCallback(async () => {
+  const startInterval = useCallback(() => {
     if (!inProgressRef.current) {
       return;
     }
-
+  
     if (timeRemainingRef.current <= 0) {
       setTimeRemaining(tasksRef.current[0].time);
     }
-
+  
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
     }
-
+  
     isPlayingRef.current = true;
     setIsPlaying(true);
-
+  
+    startTimeRef.current = Date.now(); // Store the start time
+  
     const newIntervalId = window.setInterval(() => {
+      const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      const newTimeRemaining = tasksRef.current[currentTaskIndexRef.current]?.time - elapsedTime;
+  
       setTimeRemaining(prevTimeRemaining => {
-        const newTimeRemaining = prevTimeRemaining - 1;
         if (newTimeRemaining <= 0) {
           skipNext();
         }
         return newTimeRemaining;
       });
     }, 1000);
-
+  
     intervalIdRef.current = newIntervalId;
-
+  
     return () => {
       clearInterval(newIntervalId);
     };
   }, []);
-
+  
   useEffect(() => {
     startInterval();
   }, [tasks, currentTaskIndex]);
@@ -220,15 +225,30 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (!inProgressRef.current) {
       return;
     }
+  
+    const currentTaskIndex = currentTaskIndexRef.current;
+    const tasks = tasksRef.current;
+    const nextTaskIndex = currentTaskIndex + 1;
+  
     setCurrentTaskIndex(prevIndex => prevIndex + 1);
-    if (currentTaskIndexRef.current < tasksRef.current.length - 1) {
-      new Notification(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`)
-      setSnackbarMessage(`"${tasksRef.current[currentTaskIndex].name}" completed, "${tasksRef.current[currentTaskIndex + 1].name}" started for ${tasksRef.current[currentTaskIndex + 1].time / 60} minute${tasksRef.current[currentTaskIndex + 1].time / 60 === 1 ? '' : 's'}`);
+  
+    if (nextTaskIndex < tasks.length) {
+      const currentTask = tasks[currentTaskIndex];
+      const nextTask = tasks[nextTaskIndex];
+      const minutes = nextTask.time / 60;
+      const pluralSuffix = minutes === 1 ? '' : 's';
+      const notificationMessage = `"${currentTask.name}" completed, "${nextTask.name}" started for ${minutes} minute${pluralSuffix}`;
+  
+      console.log("sending notification")
+      new Notification(notificationMessage);
+      setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
-      setTimeRemaining(tasksRef.current[currentTaskIndex + 1].time);
+      setTimeRemaining(nextTask.time);
     } else {
-      new Notification("All tasks completed!")
-      setSnackbarMessage("All tasks completed!");
+      const notificationMessage = "All tasks completed!";
+  
+      new Notification(notificationMessage);
+      setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
       clearAll();
     }
@@ -271,7 +291,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         <Typography variant="h1" gutterBottom sx={{ mb: -1, fontWeight: 'bold', mt: -2, fontSize: '120px' }}>
           {timeRemaining > 0 ? Math.floor(timeRemaining / 60).toString().padStart(2, '0') : '00'}:{timeRemaining > 0 ? (timeRemaining % 60).toString().padStart(2, '0') : '00'}
         </Typography>
-        <Typography variant="h3" gutterBottom sx={{ mb: 2 }}>
+        <Typography variant="h3" gutterBottom sx={{ mb: 2, p: "0 20px" }} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100vw', overflowWrap: 'break-word' }}>
           {inProgress ? (
             tasks[currentTaskIndex]?.index
               ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
