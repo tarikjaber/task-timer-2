@@ -39,6 +39,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   inProgressRef.current = inProgress;
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const startTimeRef = useRef<number>(0);
 
   function togglePlayPause() {
     if (isPlayingRef.current) {
@@ -71,39 +72,43 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     };
   }, []);
 
-  const startInterval = useCallback(async () => {
+  const startInterval = useCallback(() => {
     if (!inProgressRef.current) {
       return;
     }
-
+  
     if (timeRemainingRef.current <= 0) {
       setTimeRemaining(tasksRef.current[0].time);
     }
-
+  
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
     }
-
+  
     isPlayingRef.current = true;
     setIsPlaying(true);
-
+  
+    startTimeRef.current = Date.now(); // Store the start time
+  
     const newIntervalId = window.setInterval(() => {
+      const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      const newTimeRemaining = tasksRef.current[currentTaskIndexRef.current]?.time - elapsedTime;
+  
       setTimeRemaining(prevTimeRemaining => {
-        const newTimeRemaining = prevTimeRemaining - 1;
         if (newTimeRemaining <= 0) {
           skipNext();
         }
         return newTimeRemaining;
       });
     }, 1000);
-
+  
     intervalIdRef.current = newIntervalId;
-
+  
     return () => {
       clearInterval(newIntervalId);
     };
   }, []);
-
+  
   useEffect(() => {
     startInterval();
   }, [tasks, currentTaskIndex]);
