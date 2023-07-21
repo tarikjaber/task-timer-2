@@ -305,7 +305,19 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     if (value.length === 1) {
       if ((tasksInputRef.current ?? "").length > 1) {
-        clearAll(true);
+        setInProgress(false);
+        inProgressRef.current = false;
+        editor.current.view?.focus();
+        isPlayingRef.current = false;
+        setIsPlaying(false);
+        setInProgress(false);
+        setTimeRemaining(10 * 60);
+        timeRemainingRef.current = 10 * 60;
+
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+        }
+        intervalIdRef.current = null;
       }
     }
 
@@ -355,7 +367,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         </Paper>
       </Box>
       <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
         <MuiAlert onClose={() => setSnackbarOpen(false)} severity="success" elevation={6} variant="filled" sx={{ width: '100%' }}>
           {snackbarMessage}
         </MuiAlert>
