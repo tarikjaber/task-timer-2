@@ -63,7 +63,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     setInProgress(true);
     setIsPlaying(true);
     setTasks(parsedTasks);
-  },[currentTaskIndex]);
+  }, [currentTaskIndex]);
 
   const togglePlayPause = useCallback(() => {
     if (isPlayingRef.current) {
@@ -74,6 +74,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, [playTimer]);
 
   useEffect(() => {
+    console.log("useeffect called here")
     const urlParams = new URLSearchParams(window.location.search);
     const tasks: string | null = urlParams.get('tasks');
 
@@ -103,9 +104,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [playTimer, togglePlayPause]);
+  }, []);
 
   const skipNext = useCallback(() => {
+    console.log("skipnext called")
     if (!inProgressRef.current) {
       return;
     }
@@ -311,6 +313,8 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         setInProgress(false);
         setTimeRemaining(10 * 60);
         timeRemainingRef.current = 10 * 60;
+        setCurrentTaskIndex(0);
+        currentTaskIndexRef.current = 0;
 
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
@@ -349,7 +353,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         }
       </Box>
       <Box sx={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-        <Paper variant="outlined" sx={{ p: 0, width: "100%", display: "inline-block", borderRadius: 0 }}>
+        <Paper variant="outlined" sx={{ p: 0, width: "100%", display: "inline-block" }}>
           <CodeMirror
             basicSetup={{ lineNumbers: false }}
             ref={editor}
