@@ -9,8 +9,7 @@ import { Task, parseTasks } from '../utils';
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import Snackbar from '@mui/material/Snackbar';
-import MuiAlert, { AlertProps } from '@mui/material/Alert';
-import { time } from 'console';
+import MuiAlert from '@mui/material/Alert';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -42,13 +41,37 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const startTimeRef = useRef<number>(0);
   const [completedAllTasks, setCompletedAllTasks] = useState<boolean>(false);
 
-  function togglePlayPause() {
+  const playTimer = useCallback(() => {
+    let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
+    const parsedTasks = parseTasks(tasksInputRef.current ?? "");
+    let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
+
+    if (currentTime !== nextTime) {
+      setTimeRemaining(nextTime);
+    }
+
+    if (parsedTasks.length === 0) {
+      return;
+    }
+
+    let newTasksInputValue = tasksInputRef.current?.split('\n')
+      .map(task => task.trim().replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, "")).join('\n') ?? '';
+
+    setTasksInputValue(newTasksInputValue);
+
+    isPlayingRef.current = true;
+    setInProgress(true);
+    setIsPlaying(true);
+    setTasks(parsedTasks);
+  },[currentTaskIndex]);
+
+  const togglePlayPause = useCallback(() => {
     if (isPlayingRef.current) {
       pauseTimer();
     } else {
       playTimer();
     }
-  }
+  }, [playTimer]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -80,6 +103,40 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
+  }, [playTimer, togglePlayPause]);
+
+  const skipNext = useCallback(() => {
+    if (!inProgressRef.current) {
+      return;
+    }
+
+    const currentTaskIndex = currentTaskIndexRef.current;
+    const tasks = tasksRef.current;
+    const nextTaskIndex = currentTaskIndex + 1;
+
+    setCurrentTaskIndex(prevIndex => prevIndex + 1);
+
+    if (nextTaskIndex < tasks.length) {
+      const currentTask = tasks[currentTaskIndex];
+      const nextTask = tasks[nextTaskIndex];
+      const minutes = nextTask.time / 60;
+      const pluralSuffix = minutes === 1 ? '' : 's';
+      const previousIndexText = currentTask.index ? ` (${currentTask.index})` : '';
+      const nextIndexText = nextTask.index ? ` (${nextTask.index})` : '';
+      const notificationMessage = `"${currentTask.name}${previousIndexText}" completed, "${nextTask.name}${nextIndexText}" started for ${minutes} minute${pluralSuffix}`;
+
+      new Notification(notificationMessage);
+      setSnackbarMessage(notificationMessage);
+      setSnackbarOpen(true);
+      setTimeRemaining(nextTask.time);
+    } else {
+      const notificationMessage = "All tasks completed!";
+
+      new Notification(notificationMessage);
+      setSnackbarMessage(notificationMessage);
+      setSnackbarOpen(true);
+      clearAll(false);
+    }
   }, []);
 
   const startInterval = useCallback((resetTaskTime: boolean) => {
@@ -121,11 +178,11 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return () => {
       clearInterval(newIntervalId);
     };
-  }, []);
+  }, [skipNext]);
 
   useEffect(() => {
     startInterval(false);
-  }, [tasks, currentTaskIndex]);
+  }, [tasks, currentTaskIndex, startInterval]);
 
   useEffect(() => {
     if (isPlayingRef.current) {
@@ -137,7 +194,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     } else {
       document.title = 'Task Timer';
     }
-  }, [isPlayingRef.current, timeRemaining, tasks, currentTaskIndex]);
+  }, [timeRemaining, tasks, currentTaskIndex]);
 
   function tenPercentBack() {
     if (!inProgressRef.current) {
@@ -216,31 +273,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
   }
 
-  function playTimer() {
-    console.log('playtimer')
-    let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
-    const parsedTasks = parseTasks(tasksInputRef.current ?? "");
-    let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
-
-    if (currentTime !== nextTime) {
-      setTimeRemaining(nextTime);
-    }
-
-    if (parsedTasks.length === 0) {
-      return;
-    }
-
-    let newTasksInputValue = tasksInputRef.current?.split('\n')
-      .map(task => task.trim().replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, "")).join('\n') ?? '';
-
-    setTasksInputValue(newTasksInputValue);
-
-    isPlayingRef.current = true;
-    setInProgress(true);
-    setIsPlaying(true);
-    setTasks(parsedTasks);
-  }
-
   useEffect(() => {
     if (currentTaskIndex >= tasks.length && tasks.length > 0) {
       setCompletedAllTasks(true);
@@ -248,40 +280,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setCompletedAllTasks(false);
     }
   }, [currentTaskIndex, tasks]);
-
-  function skipNext() {
-    if (!inProgressRef.current) {
-      return;
-    }
-
-    const currentTaskIndex = currentTaskIndexRef.current;
-    const tasks = tasksRef.current;
-    const nextTaskIndex = currentTaskIndex + 1;
-
-    setCurrentTaskIndex(prevIndex => prevIndex + 1);
-
-    if (nextTaskIndex < tasks.length) {
-      const currentTask = tasks[currentTaskIndex];
-      const nextTask = tasks[nextTaskIndex];
-      const minutes = nextTask.time / 60;
-      const pluralSuffix = minutes === 1 ? '' : 's';
-      const previousIndexText = currentTask.index ? ` (${currentTask.index})` : '';
-      const nextIndexText = nextTask.index ? ` (${nextTask.index})` : '';
-      const notificationMessage = `"${currentTask.name}${previousIndexText}" completed, "${nextTask.name}${nextIndexText}" started for ${minutes} minute${pluralSuffix}`;
-
-      new Notification(notificationMessage);
-      setSnackbarMessage(notificationMessage);
-      setSnackbarOpen(true);
-      setTimeRemaining(nextTask.time);
-    } else {
-      const notificationMessage = "All tasks completed!";
-
-      new Notification(notificationMessage);
-      setSnackbarMessage(notificationMessage);
-      setSnackbarOpen(true);
-      clearAll(false);
-    }
-  }
 
   function skipPrevious() {
     if (currentTaskIndex > 0) {
