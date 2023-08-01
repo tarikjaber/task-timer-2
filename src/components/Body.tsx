@@ -7,6 +7,7 @@ import { Task } from '../utils/types';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import Editor from './Editor';
+import { useSnackbar } from '../hooks/useSnackbar';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -17,6 +18,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const intervalIdRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const isPlayingRef = useRef<boolean>(false);
+  isPlayingRef.current = isPlaying;
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const currentTaskIndexRef = useRef<number>(0);
   currentTaskIndexRef.current = currentTaskIndex;
@@ -29,14 +31,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [tasksInputValue, setTasksInputValue] = useState<string>('');
   const tasksInputRef = useRef<string>();
   tasksInputRef.current = tasksInputValue;
-  const editor = useRef<ReactCodeMirrorRef>({});
   const [inProgress, setInProgress] = useState<boolean>(false);
   const inProgressRef = useRef<boolean>(false);
   inProgressRef.current = inProgress;
-  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const startTimeRef = useRef<number>(0);
   const [completedAllTasks, setCompletedAllTasks] = useState<boolean>(false);
+  const editor = useRef<ReactCodeMirrorRef>({});
+  const { snackbarOpen, snackbarMessage, setSnackbarOpen, setSnackbarMessage } = useSnackbar();
 
   const playTimer = useCallback(() => {
     let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
@@ -56,7 +57,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     setTasksInputValue(newTasksInputValue);
 
-    isPlayingRef.current = true;
     setInProgress(true);
     setIsPlaying(true);
     setTasks(parsedTasks);
@@ -76,7 +76,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     if (tasks) {
       setTasksInputValue(tasks);
-      tasksInputRef.current = tasks;
       localStorage.setItem('tasks', tasks);
       playTimer();
     } else {
@@ -100,7 +99,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  });
 
   const skipNext = useCallback(() => {
     if (!inProgressRef.current) {
@@ -148,7 +147,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       clearInterval(intervalIdRef.current);
     }
 
-    isPlayingRef.current = true;
     setIsPlaying(true);
 
     if (resetTaskTime) {
@@ -240,7 +238,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     }
     inProgressRef.current = false;
     editor.current.view?.focus();
-    isPlayingRef.current = false;
     timeRemainingRef.current = 0;
     setInProgress(false);
     setIsPlaying(false);
@@ -263,7 +260,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }
 
   function pauseTimer() {
-    isPlayingRef.current = false;
     setIsPlaying(false);
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -302,7 +298,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       if ((tasksInputRef.current ?? "").length > 1) {
         inProgressRef.current = false;
         editor.current.view?.focus();
-        isPlayingRef.current = false;
         timeRemainingRef.current = 10 * 60;
         currentTaskIndexRef.current = 0;
         setIsPlaying(false);
@@ -316,7 +311,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         intervalIdRef.current = null;
       }
     }
-
     tasksInputRef.current = value;
   }
 
@@ -347,7 +341,18 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
         setTasksInputValue={setTasksInputValue}
         editor={editor}
       />
-      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
+      <Icons 
+        clearAll={clearAll}
+        resetCurrentTaskTime={resetCurrentTaskTime}
+        toggleDarkMode={toggleDarkMode}
+        darkMode={darkMode}
+        playTimer={playTimer}
+        pauseTimer={pauseTimer}
+        skipNext={skipNext}
+        skipPrevious={skipPrevious}
+        tenPercentBack={tenPercentBack}
+        isPlaying={isPlaying}
+      />
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
         <MuiAlert onClose={() => setSnackbarOpen(false)} severity="success" elevation={6} variant="filled" sx={{ width: '100%' }}>
           {snackbarMessage}
