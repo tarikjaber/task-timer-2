@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import Body from './components/Body';
 import '@fontsource/roboto/300.css';
@@ -21,7 +21,7 @@ const darkTheme = createTheme({
 });
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = React.useState(false);
 
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode');
