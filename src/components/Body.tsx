@@ -7,6 +7,7 @@ import { Task } from '../utils/types';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import Editor from './Editor';
+import { useSnackbar } from '../hooks/useSnackbar';
 
 interface BodyProps {
   toggleDarkMode: () => void;
@@ -33,8 +34,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [inProgress, setInProgress] = useState<boolean>(false);
   const inProgressRef = useRef<boolean>(false);
   inProgressRef.current = inProgress;
-  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const { snackbarOpen, snackbarMessage, setSnackbarOpen, setSnackbarMessage } = useSnackbar();
   const startTimeRef = useRef<number>(0);
   const [completedAllTasks, setCompletedAllTasks] = useState<boolean>(false);
 
