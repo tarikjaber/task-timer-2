@@ -5,7 +5,8 @@ import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { Paper } from '@mui/material';
-import { Task, parseTasks } from '../utils';
+import { parseTasks } from '../utils';
+import { Task } from '../utils/types';
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import Snackbar from '@mui/material/Snackbar';
@@ -74,7 +75,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, [playTimer]);
 
   useEffect(() => {
-    console.log("useeffect called here")
     const urlParams = new URLSearchParams(window.location.search);
     const tasks: string | null = urlParams.get('tasks');
 
@@ -107,7 +107,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   }, []);
 
   const skipNext = useCallback(() => {
-    console.log("skipnext called")
     if (!inProgressRef.current) {
       return;
     }
@@ -133,7 +132,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setTimeRemaining(nextTask.time);
     } else {
       const notificationMessage = "All tasks completed!";
-
       new Notification(notificationMessage);
       setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
@@ -160,6 +158,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (resetTaskTime) {
       startTimeRef.current = Date.now(); // Store the start time
     } else {
+      
       startTimeRef.current = Date.now() - (tasksRef.current[currentTaskIndexRef.current].time - timeRemainingRef.current) * 1000;
     }
 
@@ -203,15 +202,15 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       if (tasks.length === 0) {
         return;
       }
-      setInProgress(true);
       inProgressRef.current = true;
-      setIsPlaying(true);
       let time = tasks[tasks.length - 1].time;
-      setCurrentTaskIndex(tasks.length - 1);
       currentTaskIndexRef.current = tasks.length - 1;
-      setTimeRemaining(Math.ceil(time * 0.1));
       timeRemainingRef.current = Math.ceil(time * 0.1);
-
+      
+      setCurrentTaskIndex(tasks.length - 1);
+      setTimeRemaining(Math.ceil(time * 0.1));
+      setInProgress(true);
+      setIsPlaying(true);
       startInterval(false);
 
       return;
@@ -243,14 +242,14 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (clearInput) {
       setTasksInputValue('');
     }
-    setInProgress(false);
     inProgressRef.current = false;
     editor.current.view?.focus();
     isPlayingRef.current = false;
+    timeRemainingRef.current = 0;
+    setInProgress(false);
     setIsPlaying(false);
     setInProgress(false);
     setTimeRemaining(0);
-    timeRemainingRef.current = 0;
 
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
@@ -285,12 +284,12 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
   function skipPrevious() {
     if (currentTaskIndex > 0) {
-      setTimeRemaining(tasks[currentTaskIndex - 1].time);
       timeRemainingRef.current = tasks[currentTaskIndex - 1].time;
-      setCurrentTaskIndex(currentTaskIndex - 1);
       currentTaskIndexRef.current = currentTaskIndex - 1;
-      setInProgress(true);
       inProgressRef.current = true;
+      setTimeRemaining(tasks[currentTaskIndex - 1].time);
+      setCurrentTaskIndex(currentTaskIndex - 1);
+      setInProgress(true);
       startInterval(true);
     }
   }
@@ -305,16 +304,15 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
     if (value.length === 1) {
       if ((tasksInputRef.current ?? "").length > 1) {
-        setInProgress(false);
         inProgressRef.current = false;
         editor.current.view?.focus();
         isPlayingRef.current = false;
+        timeRemainingRef.current = 10 * 60;
+        currentTaskIndexRef.current = 0;
         setIsPlaying(false);
         setInProgress(false);
         setTimeRemaining(10 * 60);
-        timeRemainingRef.current = 10 * 60;
         setCurrentTaskIndex(0);
-        currentTaskIndexRef.current = 0;
 
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);

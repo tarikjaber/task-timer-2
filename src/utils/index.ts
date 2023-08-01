@@ -1,9 +1,4 @@
-export interface Task {
-    name: string;
-    time: number;
-    repetitionCount: number;
-    index?: number;
-}
+import { Task } from "./types";
 
 export function isNumeric(value: string) {
     return /^-?\d+$/.test(value);
