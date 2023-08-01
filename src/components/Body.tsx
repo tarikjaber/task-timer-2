@@ -37,14 +37,24 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const { snackbarOpen, snackbarMessage, setSnackbarOpen, setSnackbarMessage } = useSnackbar();
   const startTimeRef = useRef<number>(0);
   const [completedAllTasks, setCompletedAllTasks] = useState<boolean>(false);
+  const completedAllTasksRef = useRef<boolean>(false);
+  completedAllTasksRef.current = completedAllTasks;
 
   const playTimer = useCallback(() => {
-    let currentTime = tasksRef.current[currentTaskIndex]?.time || 0;
+    if (completedAllTasksRef.current) {
+      clearAll(false);
+      setCurrentTaskIndex(0);
+      currentTaskIndexRef.current = 0;
+      completedAllTasksRef.current = false;
+    }
+
+    let currentTime = tasksRef.current[currentTaskIndexRef.current]?.time || 0;
     const parsedTasks = parseTasks(tasksInputRef.current ?? "");
     let nextTime = parsedTasks[currentTaskIndex]?.time || 0;
 
     if (currentTime !== nextTime) {
       setTimeRemaining(nextTime);
+      timeRemainingRef.current = nextTime;
     }
 
     if (parsedTasks.length === 0) {
@@ -55,11 +65,13 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       .map(task => task.trim().replace(/^- \[ \] /, '').replace(/^- \[[xX]\] /, '').replace(/^- /, "")).join('\n') ?? '';
 
     setTasksInputValue(newTasksInputValue);
-
-    isPlayingRef.current = true;
     setInProgress(true);
     setIsPlaying(true);
     setTasks(parsedTasks);
+    tasksRef.current = parsedTasks;
+    inProgressRef.current = true;
+    isPlayingRef.current = true;
+    startInterval(true);
   }, [currentTaskIndex]);
 
   const togglePlayPause = useCallback(() => {
@@ -126,6 +138,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       setSnackbarMessage(notificationMessage);
       setSnackbarOpen(true);
       setTimeRemaining(nextTask.time);
+      startInterval(true);
     } else {
       const notificationMessage = "All tasks completed!";
       new Notification(notificationMessage);
@@ -154,7 +167,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
     if (resetTaskTime) {
       startTimeRef.current = Date.now(); // Store the start time
     } else {
-      
       startTimeRef.current = Date.now() - (tasksRef.current[currentTaskIndexRef.current].time - timeRemainingRef.current) * 1000;
     }
 
@@ -176,10 +188,6 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       clearInterval(newIntervalId);
     };
   }, [skipNext]);
-
-  useEffect(() => {
-    startInterval(false);
-  }, [tasks, currentTaskIndex, startInterval]);
 
   useEffect(() => {
     if (isPlayingRef.current) {
