@@ -42,8 +42,10 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [hardMode, setHardMode] = useState<boolean>(false);
   const hardModeRef = useRef<boolean>(false);
   hardModeRef.current = hardMode;
+  const [failed, setFailed] = useState<boolean>(false);
 
   const playTimer = useCallback(() => {
+    setFailed(false);
     if (completedAllTasksRef.current) {
       clearAll(false);
       setCurrentTaskIndex(0);
@@ -182,6 +184,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           if (hardModeRef.current) {
             // User didn't finish in time
             clearAll(true);
+            setFailed(true);
           } else {
             skipNext();
           }
@@ -347,13 +350,19 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
             Completed All Tasks
           </Typography>
           :
-          <Typography variant="h3" gutterBottom sx={{ mb: 2, p: "0 20px" }} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100vw', overflowWrap: 'break-word' }}>
-            {inProgress ? (
-              tasks[currentTaskIndex]?.index
-                ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
-                : tasks[currentTaskIndex]?.name || 'Task Timer'
-            ) : 'Task Timer'}
-          </Typography>
+          failed ? (
+            <Typography variant="h3" color="error.main" sx={{ mb: 2 }}>
+              Mission Failed
+            </Typography>
+          ) : (
+            <Typography variant="h3" gutterBottom sx={{ mb: 2, p: "0 20px" }} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100vw', overflowWrap: 'break-word' }}>
+              {inProgress ? (
+                tasks[currentTaskIndex]?.index
+                  ? `${tasks[currentTaskIndex].name} (${tasks[currentTaskIndex].index})`
+                  : tasks[currentTaskIndex]?.name || 'Task Timer'
+              ) : 'Task Timer'}
+            </Typography>
+          )
         }
       </Box>
       <Editor

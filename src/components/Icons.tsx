@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tooltip, Box, Dialog, DialogContent, DialogTitle, FormControl, FormControlLabel, Checkbox, TextField, Button, Select, MenuItem, InputLabel, Typography } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import StartIcon from '@mui/icons-material/Start';
