@@ -39,6 +39,9 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
   const [completedAllTasks, setCompletedAllTasks] = useState<boolean>(false);
   const completedAllTasksRef = useRef<boolean>(false);
   completedAllTasksRef.current = completedAllTasks;
+  const [hardMode, setHardMode] = useState<boolean>(false);
+  const hardModeRef = useRef<boolean>(false);
+  hardModeRef.current = hardMode;
 
   const playTimer = useCallback(() => {
     if (completedAllTasksRef.current) {
@@ -81,7 +84,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       playTimer();
     }
   }, [playTimer]);
-  
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tasks: string | null = urlParams.get('tasks');
@@ -176,7 +179,12 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
 
       setTimeRemaining(prevTimeRemaining => {
         if (newTimeRemaining <= 0) {
-          skipNext();
+          if (hardModeRef.current) {
+            // User didn't finish in time
+            clearAll(true);
+          } else {
+            skipNext();
+          }
         }
         return newTimeRemaining;
       });
@@ -210,7 +218,7 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
       let time = tasks[tasks.length - 1].time;
       currentTaskIndexRef.current = tasks.length - 1;
       timeRemainingRef.current = Math.ceil(time * 0.1);
-      
+
       setCurrentTaskIndex(tasks.length - 1);
       setTimeRemaining(Math.ceil(time * 0.1));
       setInProgress(true);
@@ -348,14 +356,27 @@ function Body({ toggleDarkMode, darkMode }: BodyProps) {
           </Typography>
         }
       </Box>
-      <Editor 
+      <Editor
         darkMode={darkMode}
         tasksInputValue={tasksInputValue}
         tasksInputChange={tasksInputChange}
         setTasksInputValue={setTasksInputValue}
         editor={editor}
       />
-      <Icons {...{ clearAll, resetCurrentTaskTime, toggleDarkMode, darkMode, playTimer, pauseTimer, skipNext, skipPrevious, tenPercentBack, isPlaying }} />
+      <Icons {...{
+        clearAll,
+        resetCurrentTaskTime,
+        toggleDarkMode,
+        darkMode,
+        playTimer,
+        pauseTimer,
+        skipNext,
+        skipPrevious,
+        tenPercentBack,
+        isPlaying,
+        hardMode,
+        setHardMode
+      }} />
       <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
         <MuiAlert onClose={() => setSnackbarOpen(false)} severity="success" elevation={6} variant="filled" sx={{ width: '100%' }}>
           {snackbarMessage}
